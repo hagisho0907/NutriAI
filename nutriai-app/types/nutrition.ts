@@ -31,27 +31,42 @@ export interface PFCBalance {
   carb: number; // Percentage
 }
 
-// Daily nutrition summary
-export interface DailyNutrition extends NutritionData {
-  date: string; // ISO date format (YYYY-MM-DD)
-  calorieIntake: number;
-  calorieBurned: number;
-  waterMl?: number;
-  // Targets
-  targetCalories: number;
-  targetProteinG: number;
-  targetFatG: number;
-  targetCarbG: number;
-  // Calculated fields
-  netCalories: number; // intake - burned
-  pfcBalance: PFCBalance;
+export type NutrientKey =
+  | 'calories'
+  | 'protein'
+  | 'fat'
+  | 'carbs'
+  | 'fiber'
+  | 'sugar'
+  | 'sodium'
+  | 'saturatedFat'
+  | 'cholesterol'
+
+export interface DailyNutrition {
+  id: string;
+  userId: string;
+  date: string | Date;
+  totalNutrients: Record<NutrientKey | string, number>;
+  meals: string[];
+  waterIntake: number;
+  notes?: string;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  // Legacy fields kept for backward compatibility
+  calorieIntake?: number;
+  calorieBurned?: number;
+  targetCalories?: number;
+  targetProteinG?: number;
+  targetFatG?: number;
+  targetCarbG?: number;
+  netCalories?: number;
+  pfcBalance?: PFCBalance;
 }
 
-// Daily summary with additional fields from DB
 export interface DailySummary {
   id: string;
   userId: string;
-  summaryDate: string; // ISO date format
+  summaryDate: string;
   calorieIntake: number;
   calorieBurned: number;
   proteinG: number;
@@ -59,26 +74,55 @@ export interface DailySummary {
   carbG: number;
   waterMl?: number;
   sleepHours?: number;
-  tdeeEstimated?: number; // Total Daily Energy Expenditure
-  adherenceScore?: number; // 0-100
+  tdeeEstimated?: number;
+  adherenceScore?: number;
   createdAt: string;
 }
 
-// Nutrition goals/targets
+export interface NutrientProgress {
+  consumed: number;
+  target: number;
+  remaining: number;
+  percentage: number;
+}
+
+export type NutrientBalance = Record<NutrientKey | string, NutrientProgress>;
+
 export interface NutritionGoals {
-  dailyCalories: number;
-  dailyProteinG: number;
-  dailyFatG: number;
-  dailyCarbG: number;
+  id: string;
+  userId: string;
+  dailyTargets: Record<NutrientKey | string, number>;
+  macroRatios: {
+    protein: number;
+    fat: number;
+    carbs: number;
+  };
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  // Legacy fields for compatibility with older code paths
+  dailyCalories?: number;
+  dailyProteinG?: number;
+  dailyFatG?: number;
+  dailyCarbG?: number;
   dailyWaterMl?: number;
-  // Ranges for flexibility
   calorieRange?: {
     min: number;
     max: number;
   };
-  macroRatios?: {
+  macroRatiosLegacy?: {
     proteinPercent: number;
     fatPercent: number;
     carbPercent: number;
+  };
+}
+
+export interface NutritionSummary {
+  date: string;
+  nutrition: DailyNutrition;
+  goals: NutritionGoals;
+  balance: NutrientBalance;
+  insights: {
+    topNutrients: string[];
+    recommendations: string[];
   };
 }

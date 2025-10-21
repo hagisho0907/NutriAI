@@ -27,8 +27,8 @@ export interface Food extends NutritionData {
   category?: FoodCategory;
   externalSource?: string; // API source
   isVerified: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Custom food created by user
@@ -79,4 +79,68 @@ export interface CreateMealItemRequest {
   proteinG?: number;
   fatG?: number;
   carbG?: number;
+}
+
+export interface FoodRecommendation {
+  recommended: Food[];
+  reasoning: string[];
+  nutritionFocus: string[];
+}
+
+export interface FoodAlternatives {
+  alternatives: Food[];
+  comparisons: Array<{
+    food: Food;
+    nutritionDifference: {
+      calories: number;
+      proteinG: number;
+      fatG: number;
+      carbG: number;
+      fiberG?: number;
+    };
+    improvementScore: number;
+  }>;
+}
+
+export interface FoodComparison {
+  foods: Food[];
+  comparison: {
+    perServing: Record<string, {
+      calories: number;
+      proteinG: number;
+      fatG: number;
+      carbG: number;
+      fiberG?: number;
+    }>;
+    per100g: Record<string, {
+      calories: number;
+      proteinG: number;
+      fatG: number;
+      carbG: number;
+      fiberG?: number;
+    }>;
+  };
+  recommendations: string[];
+}
+
+export interface FoodUsageStats {
+  food: Food;
+  usageCount: number;
+  lastUsed: string;
+  averageQuantity: number;
+  nutritionContribution: {
+    dailyCaloriesPercent: number;
+    dailyProteinPercent: number;
+    dailyFatPercent: number;
+    dailyCarbPercent: number;
+  };
+  trends: {
+    usageFrequency: 'increasing' | 'decreasing' | 'stable';
+    quantityTrend: 'increasing' | 'decreasing' | 'stable';
+  };
+}
+
+export interface BatchBarcodeSearchResult {
+  found: Array<{ barcode: string; food: Food }>;
+  notFound: string[];
 }

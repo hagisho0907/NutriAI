@@ -29,8 +29,8 @@ export function MyFoodsPage() {
       setEditingFood(food);
       setFormData({
         name: food.name,
-        servingSize: food.servingSize.toString(),
-        servingUnit: food.servingUnit,
+        servingSize: food.servingSize !== undefined ? food.servingSize.toString() : '',
+        servingUnit: food.servingUnit ?? 'g',
         calories: food.calories.toString(),
         proteinG: food.proteinG.toString(),
         fatG: food.fatG.toString(),
@@ -67,6 +67,7 @@ export function MyFoodsPage() {
       fatG: Number(formData.fatG) || 0,
       carbG: Number(formData.carbG) || 0,
       createdAt: editingFood ? editingFood.createdAt : new Date().toISOString(),
+      createdBy: editingFood?.createdBy ?? 'user-demo',
     };
 
     if (editingFood) {

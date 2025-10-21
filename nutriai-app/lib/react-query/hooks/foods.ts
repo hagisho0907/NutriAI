@@ -17,8 +17,9 @@ import type { PaginatedResponse } from '../../../types/api'
  * Hook to search foods by query
  */
 export function useSearchFoods(params: FoodSearchParams) {
+  const filters = { ...params } as Record<string, unknown>
   return useQuery({
-    queryKey: queryKeys.foods.search(params.q, params),
+    queryKey: queryKeys.foods.search(params.q, filters),
     queryFn: () => foodsService.searchFoods(params),
     staleTime: STALE_TIME.MEDIUM,
     gcTime: CACHE_TIME.LONG,
@@ -159,8 +160,9 @@ export function useFoodRecommendations(params?: {
   preferredCategories?: string[]
   limit?: number
 }) {
+  const filters = params ? { ...params } : undefined
   return useQuery({
-    queryKey: queryKeys.foods.recommendations(params),
+    queryKey: queryKeys.foods.recommendations(filters),
     queryFn: () => foodsService.getFoodRecommendations(params),
     staleTime: STALE_TIME.LONG,
     gcTime: CACHE_TIME.VERY_LONG,
@@ -179,8 +181,9 @@ export function useFoodAlternatives(
     sameFoodGroup?: boolean
   }
 ) {
+  const criteriaFilters = criteria ? { ...criteria } : undefined
   return useQuery({
-    queryKey: [...queryKeys.foods.all, 'alternatives', foodId, criteria],
+    queryKey: [...queryKeys.foods.all, 'alternatives', foodId, criteriaFilters],
     queryFn: () => foodsService.getFoodAlternatives(foodId, criteria),
     staleTime: STALE_TIME.LONG,
     gcTime: CACHE_TIME.VERY_LONG,
@@ -217,7 +220,7 @@ export function useAdvancedFoodSearch(params: {
   offset?: number
 }) {
   return useQuery({
-    queryKey: [...queryKeys.foods.all, 'advanced-search', params],
+    queryKey: [...queryKeys.foods.all, 'advanced-search', JSON.stringify(params)],
     queryFn: () => foodsService.advancedFoodSearch(params),
     staleTime: STALE_TIME.MEDIUM,
     gcTime: CACHE_TIME.LONG,

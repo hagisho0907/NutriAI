@@ -17,8 +17,12 @@ export function AnalyticsPage() {
   const latestWeight = mockBodyMetrics[mockBodyMetrics.length - 1];
   const startWeight = mockBodyMetrics[0];
   const weightChange = latestWeight.weightKg - startWeight.weightKg;
-  const targetWeight = mockGoal.targetWeightKg;
+  const targetWeight = mockGoal.targetWeightKg ?? latestWeight.weightKg;
+  const totalDelta = startWeight.weightKg - targetWeight;
   const remainingWeight = latestWeight.weightKg - targetWeight;
+  const progressRatio = totalDelta !== 0
+    ? Math.min(Math.abs(weightChange) / Math.abs(totalDelta), 1)
+    : 0;
   
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [weightInput, setWeightInput] = useState('');
@@ -93,7 +97,7 @@ export function AnalyticsPage() {
               <div className="h-3 bg-white rounded-full overflow-hidden">
                 <div
                   className="h-full bg-primary rounded-full"
-                  style={{ width: `${Math.min((Math.abs(weightChange) / Math.abs(startWeight.weightKg - targetWeight)) * 100, 100)}%` }}
+                  style={{ width: `${progressRatio * 100}%` }}
                 />
               </div>
               <p className="text-xs text-muted-foreground text-center">

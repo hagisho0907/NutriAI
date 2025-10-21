@@ -3,7 +3,7 @@
 export type Gender = 'male' | 'female' | 'other' | 'unset';
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'athlete';
 export type UserStatus = 'active' | 'suspended' | 'deleted';
-export type LoginProvider = 'email' | 'google' | 'apple';
+export type LoginProvider = 'email' | 'google' | 'apple' | 'guest';
 
 // Base user interface
 export interface User {

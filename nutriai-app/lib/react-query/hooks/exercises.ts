@@ -33,8 +33,9 @@ export function useDailyExercises(date: string) {
  * Hook to get exercise log with filters and pagination
  */
 export function useExerciseLog(params: ExerciseLogParams = {}) {
+  const filters = { ...params } as Record<string, unknown>
   return useQuery({
-    queryKey: queryKeys.exercises.list(params),
+    queryKey: queryKeys.exercises.list(filters),
     queryFn: () => exercisesService.getExerciseLog(params),
     staleTime: STALE_TIME.MEDIUM,
     gcTime: CACHE_TIME.LONG,
@@ -83,8 +84,9 @@ export function useExerciseHistory(startDate: string, endDate: string, limit = 1
  * Hook to search exercise templates
  */
 export function useSearchExercises(params: ExerciseSearchParams) {
+  const filters = { ...params } as Record<string, unknown>
   return useQuery({
-    queryKey: queryKeys.exercises.search(params.q, params),
+    queryKey: queryKeys.exercises.search(params.q, filters),
     queryFn: () => exercisesService.searchExercises(params),
     staleTime: STALE_TIME.MEDIUM,
     gcTime: CACHE_TIME.LONG,
@@ -209,8 +211,9 @@ export function useLogExercise() {
         id: `temp_${Date.now()}`,
         userId: 'current-user',
         ...newExercise,
-        performedAt: newExercise.performedAt || new Date(),
-        createdAt: new Date(),
+        performedAt:
+          newExercise.performedAt || new Date().toISOString(),
+        createdAt: new Date().toISOString(),
       }
 
       queryClient.setQueryData(queryKeys.exercises.daily(date), (old: ExerciseLog[] = []) => {

@@ -2,8 +2,8 @@
 // Comprehensive type definitions for all React Query hooks
 
 import type { UseQueryResult, UseMutationResult, UseInfiniteQueryResult } from '@tanstack/react-query'
+import type { UserWithProfile } from '../../types/user'
 import type {
-  UserWithProfile,
   NutritionGoals,
   DailyNutrition,
   Meal,

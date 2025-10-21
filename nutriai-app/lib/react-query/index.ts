@@ -16,19 +16,6 @@ export {
 
 // Export query keys
 export { queryKeys, getRelatedQueryKeys } from './query-keys'
-export type {
-  QueryKey,
-  AuthQueryKey,
-  NutritionQueryKey,
-  MealsQueryKey,
-  FoodsQueryKey,
-  ExercisesQueryKey,
-  BodyMetricsQueryKey,
-  ChatQueryKey,
-  DashboardQueryKey,
-  AnalyticsQueryKey,
-  UtilityQueryKey,
-} from './query-keys'
 
 // Export providers
 export { ReactQueryProvider } from './providers'
@@ -41,7 +28,6 @@ export type {
   QueryClient,
   MutationOptions,
   QueryOptions,
-  InfiniteQueryOptions,
 } from '@tanstack/react-query'
 
 export {

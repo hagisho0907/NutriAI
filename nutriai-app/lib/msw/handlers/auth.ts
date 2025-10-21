@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw'
 import { delay, MOCK_DELAY } from '../../api/config'
 import { mockUser } from '../../mockData'
 import type { AuthTokens, GuestLoginResponse } from '../../../types/api'
-import type { UserWithProfile } from '../../../types'
+import type { UserWithProfile } from '../../../types/user'
 
 // Mock authentication tokens
 const generateMockTokens = (): AuthTokens => ({

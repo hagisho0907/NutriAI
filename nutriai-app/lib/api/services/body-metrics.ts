@@ -64,6 +64,108 @@ export interface BodyMetricsProgress {
   }
 }
 
+export interface BMICalculationResult {
+  bmi: number
+  category: 'underweight' | 'normal' | 'overweight' | 'obese'
+  healthyWeightRange: {
+    min: number
+    max: number
+  }
+}
+
+export interface BodyCompositionAnalysisResult {
+  metrics: BodyMetrics
+  analysis: {
+    bmi: number
+    bmiCategory: string
+    bodyFatCategory?: string
+    muscleMassCategory?: string
+    metabolicAge?: number
+    recommendations: string[]
+  }
+  trends: {
+    weightTrend: 'up' | 'down' | 'stable'
+    bodyFatTrend: 'up' | 'down' | 'stable'
+    muscleMassTrend: 'up' | 'down' | 'stable'
+  }
+}
+
+export interface WeeklyBodyMetricsSummary {
+  startDate: string
+  endDate: string
+  measurementCount: number
+  averageWeight: number
+  weightChange: number
+  averageBodyFat?: number
+  bodyFatChange?: number
+  weeklyGoals: {
+    targetWeightChange: number
+    actualWeightChange: number
+    onTrack: boolean
+  }
+  insights: string[]
+}
+
+export interface BodyMetricsTrends {
+  metric: string
+  period: string
+  trend: 'increasing' | 'decreasing' | 'stable'
+  changeRate: number
+  predictions: Array<{
+    date: string
+    predictedValue: number
+    confidence: number
+  }>
+  recommendations: string[]
+}
+
+export interface BodyMetricsExportResponse {
+  data: BodyMetrics[]
+  exportUrl?: string
+  filename: string
+}
+
+export interface BulkImportBodyMetricsResponse {
+  imported: BodyMetrics[]
+  failed: Array<{
+    data: CreateBodyMetricsRequest
+    error: string
+  }>
+  summary: {
+    total: number
+    successful: number
+    failed: number
+  }
+}
+
+export interface IdealWeightRecommendations {
+  idealWeightRange: {
+    min: number
+    max: number
+    target: number
+  }
+  recommendations: {
+    weightLoss?: {
+      targetWeightKg: number
+      timelineWeeks: number
+      weeklyGoal: number
+    }
+    weightGain?: {
+      targetWeightKg: number
+      timelineWeeks: number
+      weeklyGoal: number
+    }
+    maintenance?: {
+      targetWeightKg: number
+      allowedVariation: number
+    }
+  }
+  healthMetrics: {
+    bmiRange: { min: number; max: number }
+    bodyFatRange?: { min: number; max: number }
+  }
+}
+
 export const bodyMetricsService = {
   // Get body metrics with filtering and pagination
   async getBodyMetrics(params: BodyMetricsParams = {}): Promise<PaginatedResponse<BodyMetrics>> {
@@ -125,15 +227,8 @@ export const bodyMetricsService = {
   },
 
   // Get BMI calculation for a specific measurement
-  async calculateBMI(weightKg: number, heightCm: number): Promise<{
-    bmi: number
-    category: 'underweight' | 'normal' | 'overweight' | 'obese'
-    healthyWeightRange: {
-      min: number
-      max: number
-    }
-  }> {
-    const response = await apiClient.post('/api/body-metrics/calculate-bmi', {
+  async calculateBMI(weightKg: number, heightCm: number): Promise<BMICalculationResult> {
+    const response = await apiClient.post<BMICalculationResult>('/api/body-metrics/calculate-bmi', {
       weightKg,
       heightCm,
     })
@@ -141,119 +236,38 @@ export const bodyMetricsService = {
   },
 
   // Get body composition analysis
-  async getBodyCompositionAnalysis(metricsId: string): Promise<{
-    metrics: BodyMetrics
-    analysis: {
-      bmi: number
-      bmiCategory: string
-      bodyFatCategory?: string
-      muscleMassCategory?: string
-      metabolicAge?: number
-      recommendations: string[]
-    }
-    trends: {
-      weightTrend: 'up' | 'down' | 'stable'
-      bodyFatTrend: 'up' | 'down' | 'stable'
-      muscleMassTrend: 'up' | 'down' | 'stable'
-    }
-  }> {
-    const response = await apiClient.get(`/api/body-metrics/${metricsId}/analysis`)
+  async getBodyCompositionAnalysis(metricsId: string): Promise<BodyCompositionAnalysisResult> {
+    const response = await apiClient.get<BodyCompositionAnalysisResult>(`/api/body-metrics/${metricsId}/analysis`)
     return response.data
   },
 
   // Get weekly body metrics summary
-  async getWeeklyBodyMetricsSummary(startDate: string): Promise<{
-    startDate: string
-    endDate: string
-    measurementCount: number
-    averageWeight: number
-    weightChange: number
-    averageBodyFat?: number
-    bodyFatChange?: number
-    weeklyGoals: {
-      targetWeightChange: number
-      actualWeightChange: number
-      onTrack: boolean
-    }
-    insights: string[]
-  }> {
-    const response = await apiClient.get(`/api/body-metrics/weekly-summary?startDate=${startDate}`)
+  async getWeeklyBodyMetricsSummary(startDate: string): Promise<WeeklyBodyMetricsSummary> {
+    const response = await apiClient.get<WeeklyBodyMetricsSummary>(`/api/body-metrics/weekly-summary?startDate=${startDate}`)
     return response.data
   },
 
   // Get body metrics trends analysis
-  async getBodyMetricsTrends(metric: 'weight' | 'bodyFat' | 'muscleMass' | 'visceralFat', period: '30d' | '90d' | '1y' = '30d'): Promise<{
-    metric: string
-    period: string
-    trend: 'increasing' | 'decreasing' | 'stable'
-    changeRate: number // change per week
-    predictions: Array<{
-      date: string
-      predictedValue: number
-      confidence: number
-    }>
-    recommendations: string[]
-  }> {
-    const response = await apiClient.get(`/api/body-metrics/trends?metric=${metric}&period=${period}`)
+  async getBodyMetricsTrends(metric: 'weight' | 'bodyFat' | 'muscleMass' | 'visceralFat', period: '30d' | '90d' | '1y' = '30d'): Promise<BodyMetricsTrends> {
+    const response = await apiClient.get<BodyMetricsTrends>(`/api/body-metrics/trends?metric=${metric}&period=${period}`)
     return response.data
   },
 
   // Export body metrics data
-  async exportBodyMetrics(startDate: string, endDate: string, format: 'csv' | 'json' = 'json'): Promise<{
-    data: BodyMetrics[]
-    exportUrl?: string
-    filename: string
-  }> {
-    const response = await apiClient.get(`/api/body-metrics/export?startDate=${startDate}&endDate=${endDate}&format=${format}`)
+  async exportBodyMetrics(startDate: string, endDate: string, format: 'csv' | 'json' = 'json'): Promise<BodyMetricsExportResponse> {
+    const response = await apiClient.get<BodyMetricsExportResponse>(`/api/body-metrics/export?startDate=${startDate}&endDate=${endDate}&format=${format}`)
     return response.data
   },
 
   // Bulk import body metrics
-  async bulkImportBodyMetrics(metrics: CreateBodyMetricsRequest[]): Promise<{
-    imported: BodyMetrics[]
-    failed: Array<{
-      data: CreateBodyMetricsRequest
-      error: string
-    }>
-    summary: {
-      total: number
-      successful: number
-      failed: number
-    }
-  }> {
-    const response = await apiClient.post('/api/body-metrics/bulk-import', { metrics })
+  async bulkImportBodyMetrics(metrics: CreateBodyMetricsRequest[]): Promise<BulkImportBodyMetricsResponse> {
+    const response = await apiClient.post<BulkImportBodyMetricsResponse>('/api/body-metrics/bulk-import', { metrics })
     return response.data
   },
 
   // Get ideal weight recommendations
-  async getIdealWeightRecommendations(heightCm: number, age: number, gender: 'male' | 'female' | 'other', activityLevel: string): Promise<{
-    idealWeightRange: {
-      min: number
-      max: number
-      target: number
-    }
-    recommendations: {
-      weightLoss?: {
-        targetWeightKg: number
-        timelineWeeks: number
-        weeklyGoal: number
-      }
-      weightGain?: {
-        targetWeightKg: number
-        timelineWeeks: number
-        weeklyGoal: number
-      }
-      maintenance?: {
-        targetWeightKg: number
-        allowedVariation: number
-      }
-    }
-    healthMetrics: {
-      bmiRange: { min: number; max: number }
-      bodyFatRange?: { min: number; max: number }
-    }
-  }> {
-    const response = await apiClient.post('/api/body-metrics/ideal-weight', {
+  async getIdealWeightRecommendations(heightCm: number, age: number, gender: 'male' | 'female' | 'other', activityLevel: string): Promise<IdealWeightRecommendations> {
+    const response = await apiClient.post<IdealWeightRecommendations>('/api/body-metrics/ideal-weight', {
       heightCm,
       age,
       gender,

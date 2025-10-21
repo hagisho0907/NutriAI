@@ -1,6 +1,12 @@
 // Meals API service
 import { apiClient } from '../client'
-import type { Meal, MealTemplate, MealItem } from '../../../types'
+import type {
+  Meal,
+  MealTemplate,
+  MealItem,
+  MealAnalysis,
+  MealStatistics,
+} from '../../../types'
 import type { PaginatedResponse } from '../../../types/api'
 
 export interface MealLogParams {
@@ -129,21 +135,9 @@ export const mealsService = {
   },
 
   // Get meal analysis (nutrition breakdown, AI insights)
-  async getMealAnalysis(mealId: string): Promise<{
-    meal: Meal
-    nutritionBreakdown: {
-      caloriesPerItem: { itemName: string; calories: number }[]
-      macroDistribution: { protein: number; fat: number; carbs: number }
-      micronutrients?: Record<string, number>
-    }
-    aiInsights: {
-      healthScore: number
-      recommendations: string[]
-      improvements: string[]
-    }
-  }> {
+  async getMealAnalysis(mealId: string): Promise<MealAnalysis> {
     // This would be a real API endpoint for meal analysis
-    const response = await apiClient.get(`/api/meals/log/${mealId}/analysis`)
+    const response = await apiClient.get<MealAnalysis>(`/api/meals/log/${mealId}/analysis`)
     return response.data
   },
 
@@ -160,19 +154,8 @@ export const mealsService = {
   },
 
   // Get meal statistics for a period
-  async getMealStatistics(startDate: string, endDate: string): Promise<{
-    totalMeals: number
-    averageCaloriesPerMeal: number
-    mostCommonMealType: string
-    nutritionTrends: {
-      date: string
-      totalCalories: number
-      totalProtein: number
-      totalFat: number
-      totalCarbs: number
-    }[]
-  }> {
-    const response = await apiClient.get(`/api/meals/statistics?startDate=${startDate}&endDate=${endDate}`)
+  async getMealStatistics(startDate: string, endDate: string): Promise<MealStatistics> {
+    const response = await apiClient.get<MealStatistics>(`/api/meals/statistics?startDate=${startDate}&endDate=${endDate}`)
     return response.data
   },
 }

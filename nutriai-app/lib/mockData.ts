@@ -27,14 +27,23 @@ interface SimplifiedUserProfile extends Omit<UserProfile, 'userId'> {
   email: string;
 }
 
-interface SimplifiedMeal extends Omit<Meal, 'userId' | 'loggedAt' | 'source' | 'aiEstimated' | 'totalCalories' | 'totalProteinG' | 'totalFatG' | 'totalCarbG' | 'createdAt'> {
+interface SimplifiedMeal {
+  id: string;
   date: string;
+  mealType: Meal['mealType'];
+  notes?: string;
   items: SimplifiedMealItem[];
 }
 
-interface SimplifiedMealItem extends Omit<MealItem, 'mealId' | 'foodId' | 'createdAt' | 'confidence' | 'fiberG'> {
+interface SimplifiedMealItem {
   id: string;
   foodName: string;
+  quantity: number;
+  unit: string;
+  calories: number;
+  proteinG: number;
+  fatG: number;
+  carbG: number;
 }
 
 interface SimplifiedExercise extends Omit<ExerciseLog, 'userId' | 'templateId' | 'performedAt' | 'createdAt' | 'templateName'> {
@@ -48,15 +57,25 @@ interface SimplifiedBodyMetric {
   bodyFatPct?: number;
 }
 
-interface SimplifiedDailySummary extends Omit<DailyNutrition, 'netCalories' | 'pfcBalance'> {
+interface SimplifiedDailySummary {
+  date: string;
+  calorieIntake: number;
+  calorieBurned: number;
+  proteinG: number;
+  fatG: number;
+  carbG: number;
+  targetCalories: number;
+  targetProteinG: number;
+  targetFatG: number;
+  targetCarbG: number;
   tasks: DailyTask[];
 }
 
 // Legacy CustomMeal interface for backward compatibility
-export interface CustomMeal extends Omit<MealTemplate, 'userId' | 'totalNutrition' | 'updatedAt' | 'foods'> {
+export interface CustomMeal {
+  id: string;
+  name: string;
   photoUrl?: string;
-  isPublic?: boolean;
-  instructions?: string;
   foods: Array<{
     foodId: string;
     foodName: string;
@@ -71,6 +90,17 @@ export interface CustomMeal extends Omit<MealTemplate, 'userId' | 'totalNutritio
   totalProteinG: number;
   totalFatG: number;
   totalCarbG: number;
+  instructions?: string;
+  isPublic?: boolean;
+  createdAt: string;
+  totalNutrients?: {
+    calories: number;
+    proteinG: number;
+    fatG: number;
+    carbG: number;
+  };
+  description?: string;
+  tags?: string[];
 }
 
 type LegacyCustomMeal = CustomMeal;
@@ -89,12 +119,15 @@ export const mockUser: SimplifiedUserProfile = {
 
 export const mockGoal: UserGoal = {
   id: 'd61fe1df-20ab-42d1-86f8-35347e5a9954',
+  userId: mockUser.id,
   goalType: 'loss',
   targetWeightKg: 55.0,
   targetBodyFatPct: 24.0,
   targetCalorieIntake: 1800,
   targetDurationWeeks: 12,
   status: 'active',
+  startDate: '2025-10-01',
+  createdAt: '2025-10-01T00:00:00Z',
 };
 
 export const mockDailySummary: SimplifiedDailySummary = {
@@ -224,6 +257,7 @@ export const mockExerciseTemplates: ExerciseTemplate[] = [
     metValue: 7.0,
     defaultDurationMin: 30,
     defaultCalories: 250,
+    createdAt: '2025-10-15T00:00:00Z',
   },
   {
     id: '2',
@@ -232,6 +266,7 @@ export const mockExerciseTemplates: ExerciseTemplate[] = [
     metValue: 3.5,
     defaultDurationMin: 30,
     defaultCalories: 120,
+    createdAt: '2025-10-14T00:00:00Z',
   },
   {
     id: '3',
@@ -240,6 +275,7 @@ export const mockExerciseTemplates: ExerciseTemplate[] = [
     metValue: 6.0,
     defaultDurationMin: 30,
     defaultCalories: 200,
+    createdAt: '2025-10-13T00:00:00Z',
   },
   {
     id: '4',
@@ -248,6 +284,7 @@ export const mockExerciseTemplates: ExerciseTemplate[] = [
     metValue: 8.0,
     defaultDurationMin: 30,
     defaultCalories: 280,
+    createdAt: '2025-10-12T00:00:00Z',
   },
   {
     id: '5',
@@ -256,6 +293,7 @@ export const mockExerciseTemplates: ExerciseTemplate[] = [
     metValue: 6.0,
     defaultDurationMin: 30,
     defaultCalories: 180,
+    createdAt: '2025-10-11T00:00:00Z',
   },
   {
     id: '6',
@@ -264,6 +302,7 @@ export const mockExerciseTemplates: ExerciseTemplate[] = [
     metValue: 3.5,
     defaultDurationMin: 30,
     defaultCalories: 105,
+    createdAt: '2025-10-10T00:00:00Z',
   },
   {
     id: '7',
@@ -272,6 +311,7 @@ export const mockExerciseTemplates: ExerciseTemplate[] = [
     metValue: 2.5,
     defaultDurationMin: 30,
     defaultCalories: 90,
+    createdAt: '2025-10-09T00:00:00Z',
   },
   {
     id: '8',
@@ -280,6 +320,7 @@ export const mockExerciseTemplates: ExerciseTemplate[] = [
     metValue: 0,
     defaultDurationMin: 30,
     defaultCalories: 0,
+    createdAt: '2025-10-08T00:00:00Z',
   },
 ];
 
@@ -532,6 +573,7 @@ export const mockCustomFoods: CustomFood[] = [
     fatG: 3,
     carbG: 12,
     createdAt: '2025-10-15T10:00:00Z',
+    createdBy: 'user-demo',
   },
   {
     id: 'cf-2',
@@ -543,6 +585,7 @@ export const mockCustomFoods: CustomFood[] = [
     fatG: 9,
     carbG: 28,
     createdAt: '2025-10-14T08:30:00Z',
+    createdBy: 'user-demo',
   },
   {
     id: 'cf-3',
@@ -554,6 +597,7 @@ export const mockCustomFoods: CustomFood[] = [
     fatG: 4,
     carbG: 28,
     createdAt: '2025-10-12T07:00:00Z',
+    createdBy: 'user-demo',
   },
 ];
 

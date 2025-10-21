@@ -153,8 +153,8 @@ export function FoodSelectionPage({
       setEditingFood(food);
       setFoodFormData({
         name: food.name,
-        servingSize: food.servingSize.toString(),
-        servingUnit: food.servingUnit,
+        servingSize: food.servingSize !== undefined ? food.servingSize.toString() : '',
+        servingUnit: food.servingUnit ?? 'g',
         calories: food.calories.toString(),
         proteinG: food.proteinG.toString(),
         fatG: food.fatG.toString(),
@@ -191,6 +191,7 @@ export function FoodSelectionPage({
       fatG: Number(foodFormData.fatG) || 0,
       carbG: Number(foodFormData.carbG) || 0,
       createdAt: editingFood ? editingFood.createdAt : new Date().toISOString(),
+      createdBy: editingFood?.createdBy ?? 'user-demo',
     };
 
     if (editingFood) {
@@ -214,7 +215,7 @@ export function FoodSelectionPage({
       id: food.id,
       name: food.name,
       calories: food.calories,
-      serving: `${food.servingSize} ${food.servingUnit}`,
+      serving: `${food.servingSize ?? 0} ${food.servingUnit ?? 'g'}`,
     });
   };
 

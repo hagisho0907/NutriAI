@@ -298,7 +298,7 @@ export const foodsHandlers = [
       id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       ...body,
       name: body.name.trim(),
-      servingUnit: body.servingUnit.trim(),
+      servingUnit: body.servingUnit ? body.servingUnit.trim() : 'g',
       createdAt: new Date().toISOString(),
     }
 

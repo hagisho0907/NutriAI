@@ -62,7 +62,7 @@ export function useBodyMetricsHistory(startDate: string, endDate: string, limit 
  */
 export function useBodyMetricsStats(params: BodyMetricsStatsParams) {
   return useQuery({
-    queryKey: queryKeys.bodyMetrics.statistics('custom', params),
+    queryKey: queryKeys.bodyMetrics.statistics('custom', JSON.stringify(params)),
     queryFn: () => bodyMetricsService.getBodyMetricsStats(params),
     staleTime: STALE_TIME.LONG,
     gcTime: CACHE_TIME.VERY_LONG,
@@ -161,12 +161,17 @@ export function useAddBodyMetrics() {
         id: `temp_${Date.now()}`,
         userId: 'current-user',
         ...newMetrics,
-        measurementDate: new Date(newMetrics.measurementDate),
-        createdAt: new Date(),
+        recordedOn: newMetrics.recordedOn ?? new Date().toISOString().split('T')[0],
+        measurementDate: new Date(newMetrics.measurementDate ?? newMetrics.recordedOn ?? new Date().toISOString()).toISOString(),
+        createdAt: new Date().toISOString(),
       }
 
       // Only update if this is more recent than the current latest
-      if (!previousLatest || new Date(optimisticMetrics.measurementDate) > new Date(previousLatest.measurementDate)) {
+      if (
+        !previousLatest ||
+        new Date(optimisticMetrics.measurementDate ?? optimisticMetrics.recordedOn).getTime() >
+          new Date(previousLatest.measurementDate ?? previousLatest.recordedOn).getTime()
+      ) {
         queryClient.setQueryData(queryKeys.bodyMetrics.latest(), optimisticMetrics)
       }
 

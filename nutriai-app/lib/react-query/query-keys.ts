@@ -115,19 +115,6 @@ export const queryKeys = {
   },
 } as const
 
-// Type utilities for query keys
-export type QueryKey = typeof queryKeys
-export type AuthQueryKey = ReturnType<typeof queryKeys.auth[keyof typeof queryKeys.auth]>
-export type NutritionQueryKey = ReturnType<typeof queryKeys.nutrition[keyof typeof queryKeys.nutrition]>
-export type MealsQueryKey = ReturnType<typeof queryKeys.meals[keyof typeof queryKeys.meals]>
-export type FoodsQueryKey = ReturnType<typeof queryKeys.foods[keyof typeof queryKeys.foods]>
-export type ExercisesQueryKey = ReturnType<typeof queryKeys.exercises[keyof typeof queryKeys.exercises]>
-export type BodyMetricsQueryKey = ReturnType<typeof queryKeys.bodyMetrics[keyof typeof queryKeys.bodyMetrics]>
-export type ChatQueryKey = ReturnType<typeof queryKeys.chat[keyof typeof queryKeys.chat]>
-export type DashboardQueryKey = ReturnType<typeof queryKeys.dashboard[keyof typeof queryKeys.dashboard]>
-export type AnalyticsQueryKey = ReturnType<typeof queryKeys.analytics[keyof typeof queryKeys.analytics]>
-export type UtilityQueryKey = ReturnType<typeof queryKeys.utility[keyof typeof queryKeys.utility]>
-
 // Helper function to invalidate related queries
 export const getRelatedQueryKeys = {
   // When nutrition changes, invalidate related queries

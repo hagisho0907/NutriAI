@@ -20,14 +20,16 @@ const convertToFullBodyMetric = (simplifiedMetric: any, userId: string): BodyMet
   return {
     id: `metric_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     userId,
+    recordedOn: typeof simplifiedMetric.date === 'string' ? simplifiedMetric.date : new Date(simplifiedMetric.date).toISOString(),
     measurementDate: new Date(simplifiedMetric.date),
     weightKg: simplifiedMetric.weightKg,
     bodyFatPct: simplifiedMetric.bodyFatPct,
-    muscleMassKg: simplifiedMetric.muscleMassKg,
+    skeletalMuscleKg: simplifiedMetric.muscleMassKg,
     visceralFatLevel: simplifiedMetric.visceralFatLevel,
-    bmr: simplifiedMetric.bmr,
+    basalMetabolicRate: simplifiedMetric.bmr,
     notes: simplifiedMetric.notes || '',
-    createdAt: new Date(),
+    source: 'manual',
+    createdAt: new Date().toISOString(),
   }
 }
 
@@ -74,13 +76,17 @@ export const bodyMetricsHandlers = [
       const start = new Date(startDate)
       const end = new Date(endDate)
       metrics = metrics.filter(metric => {
-        const metricDate = new Date(metric.measurementDate)
+      const metricDate = new Date(metric.measurementDate ?? metric.recordedOn)
         return metricDate >= start && metricDate <= end
       })
     }
 
     // Sort by measurement date (newest first)
-    metrics.sort((a, b) => new Date(b.measurementDate).getTime() - new Date(a.measurementDate).getTime())
+    metrics.sort(
+      (a, b) =>
+        new Date(b.measurementDate ?? b.recordedOn).getTime() -
+        new Date(a.measurementDate ?? a.recordedOn).getTime(),
+    )
 
     // Apply pagination
     const total = metrics.length
@@ -148,9 +154,9 @@ export const bodyMetricsHandlers = [
     }
 
     // Check if a measurement already exists for this date
-    const measurementDate = new Date(body.measurementDate)
+    const measurementDate = new Date(body.measurementDate ?? body.recordedOn)
     const existingMetric = Array.from(mockBodyMetricsDatabase.values()).find(metric => {
-      const metricDate = new Date(metric.measurementDate)
+      const metricDate = new Date(metric.measurementDate ?? metric.recordedOn)
       return metric.userId === userId && 
              metricDate.toDateString() === measurementDate.toDateString()
     })
@@ -167,12 +173,16 @@ export const bodyMetricsHandlers = [
       )
     }
 
+    const recordedOn = body.recordedOn ?? (body.measurementDate ? new Date(body.measurementDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
+    const measurementDateValue = new Date(body.measurementDate ?? recordedOn)
+
     const newMetric: BodyMetrics = {
       id: `metric_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       userId,
       ...body,
-      measurementDate: new Date(body.measurementDate),
-      createdAt: new Date(),
+      recordedOn,
+      measurementDate: measurementDateValue,
+      createdAt: new Date().toISOString(),
     }
 
     mockBodyMetricsDatabase.set(newMetric.id, newMetric)
@@ -303,7 +313,7 @@ export const bodyMetricsHandlers = [
 
     const metrics = Array.from(mockBodyMetricsDatabase.values())
       .filter(metric => metric.userId === userId)
-      .sort((a, b) => new Date(b.measurementDate).getTime() - new Date(a.measurementDate).getTime())
+      .sort((a, b) => new Date(b.measurementDate ?? b.recordedOn).getTime() - new Date(a.measurementDate ?? a.recordedOn).getTime())
 
     const latestMetric = metrics[0] || null
 
@@ -352,10 +362,10 @@ export const bodyMetricsHandlers = [
 
     const metrics = Array.from(mockBodyMetricsDatabase.values())
       .filter(metric => {
-        const metricDate = new Date(metric.measurementDate)
+        const metricDate = new Date(metric.measurementDate ?? metric.recordedOn)
         return metric.userId === userId && metricDate >= start && metricDate <= end
       })
-      .sort((a, b) => new Date(a.measurementDate).getTime() - new Date(b.measurementDate).getTime())
+      .sort((a, b) => new Date(a.measurementDate ?? a.recordedOn).getTime() - new Date(b.measurementDate ?? b.recordedOn).getTime())
 
     if (metrics.length === 0) {
       return HttpResponse.json({
@@ -452,15 +462,15 @@ export const bodyMetricsHandlers = [
 
     const metrics = Array.from(mockBodyMetricsDatabase.values())
       .filter(metric => {
-        const metricDate = new Date(metric.measurementDate)
+        const metricDate = new Date(metric.measurementDate ?? metric.recordedOn)
         return metric.userId === userId && metricDate >= startDate && metricDate <= endDate
       })
-      .sort((a, b) => new Date(a.measurementDate).getTime() - new Date(b.measurementDate).getTime())
+      .sort((a, b) => new Date(a.measurementDate ?? a.recordedOn).getTime() - new Date(b.measurementDate ?? b.recordedOn).getTime())
 
     const progress = {
       period,
       dataPoints: metrics.map(metric => ({
-        date: metric.measurementDate.toISOString().split('T')[0],
+        date: new Date(metric.measurementDate ?? metric.recordedOn).toISOString().split('T')[0],
         weight: metric.weightKg,
         bodyFat: metric.bodyFatPct,
         muscleMass: metric.muscleMassKg,
@@ -470,12 +480,12 @@ export const bodyMetricsHandlers = [
       summary: {
         totalMeasurements: metrics.length,
         firstMeasurement: metrics[0] ? {
-          date: metrics[0].measurementDate.toISOString().split('T')[0],
+          date: new Date(metrics[0].measurementDate ?? metrics[0].recordedOn).toISOString().split('T')[0],
           weight: metrics[0].weightKg,
           bodyFat: metrics[0].bodyFatPct,
         } : null,
         lastMeasurement: metrics[metrics.length - 1] ? {
-          date: metrics[metrics.length - 1].measurementDate.toISOString().split('T')[0],
+          date: new Date(metrics[metrics.length - 1].measurementDate ?? metrics[metrics.length - 1].recordedOn).toISOString().split('T')[0],
           weight: metrics[metrics.length - 1].weightKg,
           bodyFat: metrics[metrics.length - 1].bodyFatPct,
         } : null,

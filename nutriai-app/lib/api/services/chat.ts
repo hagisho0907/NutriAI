@@ -1,6 +1,15 @@
 // Chat API service
 import { apiClient } from '../client'
-import type { ChatMessage, ChatSuggestion } from '../../../types'
+import type {
+  ChatMessage,
+  ChatSuggestion,
+  ChatSummary,
+  ChatInsights,
+  ConversationStarters,
+  ChatSearchResult,
+  ChatTemplate,
+  ConversationContext,
+} from '../../../types'
 import type { PaginatedResponse } from '../../../types/api'
 
 export interface ChatMessagesParams {
@@ -12,6 +21,7 @@ export interface ChatMessagesParams {
 export interface SendMessageRequest {
   content: string
   context?: any
+  sessionId?: string
 }
 
 export interface SendMessageResponse {
@@ -121,38 +131,14 @@ export const chatService = {
   },
 
   // Get conversation summary
-  async getConversationSummary(): Promise<{
-    totalMessages: number
-    totalUserMessages: number
-    totalAiMessages: number
-    firstMessageDate: string
-    lastMessageDate: string
-    topTopics: Array<{
-      topic: string
-      count: number
-    }>
-    averageResponseTime: number
-  }> {
-    const response = await apiClient.get('/api/chat/summary')
+  async getConversationSummary(): Promise<ChatSummary> {
+    const response = await apiClient.get<ChatSummary>('/api/chat/summary')
     return response.data
   },
 
   // Get AI insights based on chat history
-  async getAIInsights(): Promise<{
-    personalizedRecommendations: string[]
-    healthTrends: Array<{
-      category: string
-      trend: 'improving' | 'declining' | 'stable'
-      description: string
-    }>
-    suggestedActions: Array<{
-      action: string
-      priority: 'high' | 'medium' | 'low'
-      category: string
-    }>
-    motivationalMessage: string
-  }> {
-    const response = await apiClient.get('/api/chat/insights')
+  async getAIInsights(): Promise<ChatInsights> {
+    const response = await apiClient.get<ChatInsights>('/api/chat/insights')
     return response.data
   },
 
@@ -179,13 +165,8 @@ export const chatService = {
   },
 
   // Get conversation starters based on user's current data
-  async getConversationStarters(): Promise<{
-    nutrition: string[]
-    exercise: string[]
-    motivation: string[]
-    general: string[]
-  }> {
-    const response = await apiClient.get('/api/chat/conversation-starters')
+  async getConversationStarters(): Promise<ConversationStarters> {
+    const response = await apiClient.get<ConversationStarters>('/api/chat/conversation-starters')
     return response.data
   },
 
@@ -195,15 +176,7 @@ export const chatService = {
     dateFrom?: string
     dateTo?: string
     limit?: number
-  }): Promise<{
-    results: Array<{
-      message: ChatMessage
-      relevanceScore: number
-      matchedText: string
-    }>
-    totalResults: number
-    searchQuery: string
-  }> {
+  }): Promise<ChatSearchResult> {
     const searchParams = new URLSearchParams({ q: query })
     
     if (filters?.role) searchParams.set('role', filters.role)
@@ -211,47 +184,31 @@ export const chatService = {
     if (filters?.dateTo) searchParams.set('dateTo', filters.dateTo)
     if (filters?.limit) searchParams.set('limit', filters.limit.toString())
 
-    const response = await apiClient.get(`/api/chat/search?${searchParams}`)
+    const response = await apiClient.get<ChatSearchResult>(`/api/chat/search?${searchParams}`)
     return response.data
   },
 
   // Get message templates for quick responses
-  async getMessageTemplates(category?: string): Promise<Array<{
-    id: string
-    category: string
-    title: string
-    content: string
-    usage_count: number
-  }>> {
+  async getMessageTemplates(category?: string): Promise<ChatTemplate[]> {
     const searchParams = new URLSearchParams()
     if (category) searchParams.set('category', category)
 
-    const response = await apiClient.get(`/api/chat/templates?${searchParams}`)
+    const response = await apiClient.get<ChatTemplate[]>(`/api/chat/templates?${searchParams}`)
     return response.data
   },
 
   // Mark a conversation as important/favorite
   async markConversationImportant(messageIds: string[]): Promise<{ success: boolean }> {
-    const response = await apiClient.post('/api/chat/mark-important', { messageIds })
+    const response = await apiClient.post<{ success: boolean }>('/api/chat/mark-important', { messageIds })
     return response.data
   },
 
   // Get conversation context for better AI responses
-  async getConversationContext(messageId?: string): Promise<{
-    recentTopics: string[]
-    userGoals: string[]
-    currentChallenges: string[]
-    preferredCommunicationStyle: string
-    relevantData: {
-      nutrition?: any
-      exercise?: any
-      bodyMetrics?: any
-    }
-  }> {
+  async getConversationContext(messageId?: string): Promise<ConversationContext> {
     const searchParams = new URLSearchParams()
     if (messageId) searchParams.set('messageId', messageId)
 
-    const response = await apiClient.get(`/api/chat/context?${searchParams}`)
+    const response = await apiClient.get<ConversationContext>(`/api/chat/context?${searchParams}`)
     return response.data
   },
 }

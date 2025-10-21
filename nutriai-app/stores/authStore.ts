@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { User, UserWithProfile, UserProfile, CreateUserGoalRequest } from '../types';
+import { User, UserWithProfile, UserProfile, CreateUserGoalRequest } from '../types/user';
 import { authService, APIError } from '../lib/api/services';
 
 interface AuthStore {

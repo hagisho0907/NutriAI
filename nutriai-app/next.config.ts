@@ -7,9 +7,6 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_API_TIMEOUT: process.env.NEXT_PUBLIC_API_TIMEOUT || '10000',
     NEXT_PUBLIC_API_RETRIES: process.env.NEXT_PUBLIC_API_RETRIES || '3',
   },
-  output: {
-    outputFileTracingRoot: './',
-  },
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.

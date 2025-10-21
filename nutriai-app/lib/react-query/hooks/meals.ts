@@ -26,8 +26,9 @@ export function useDailyMeals(date: string) {
  * Hook to get meal log with filters and pagination
  */
 export function useMealLog(params: MealLogParams = {}) {
+  const filters = { ...params } as Record<string, unknown>
   return useQuery({
-    queryKey: queryKeys.meals.list(params),
+    queryKey: queryKeys.meals.list(filters),
     queryFn: () => mealsService.getMealLog(params),
     staleTime: STALE_TIME.MEDIUM,
     gcTime: CACHE_TIME.LONG,
@@ -159,8 +160,8 @@ export function useLogMeal() {
         totalCarbG: newMeal.items?.reduce((total, item) => total + item.carbG, 0) || 0,
         source: newMeal.source || 'manual',
         aiEstimated: newMeal.aiEstimated || false,
-        loggedAt: newMeal.loggedAt || new Date(),
-        createdAt: new Date(),
+        loggedAt: newMeal.loggedAt || new Date().toISOString(),
+        createdAt: new Date().toISOString(),
         items: newMeal.items || [],
       }
 

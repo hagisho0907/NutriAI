@@ -1,6 +1,6 @@
 // Nutrition API service
 import { apiClient } from '../client'
-import type { NutritionGoals, DailyNutrition, NutrientBalance } from '../../../types'
+import type { NutritionGoals, DailyNutrition, NutrientBalance, NutritionSummary } from '../../../types'
 import type { PaginatedResponse } from '../../../types/api'
 
 export const nutritionService = {
@@ -35,24 +35,15 @@ export const nutritionService = {
   },
 
   // Get nutrition summary for a date
-  async getNutritionSummary(date: string): Promise<{
-    date: string
-    nutrition: DailyNutrition
-    goals: NutritionGoals
-    balance: NutrientBalance
-    insights: {
-      topNutrients: string[]
-      recommendations: string[]
-    }
-  }> {
-    const response = await apiClient.get(`/api/nutrition/summary?date=${date}`)
+  async getNutritionSummary(date: string): Promise<NutritionSummary> {
+    const response = await apiClient.get<NutritionSummary>(`/api/nutrition/summary?date=${date}`)
     return response.data
   },
 
   // Log water intake
   async logWater(amount: number, date?: string): Promise<{ waterIntake: number; date: Date }> {
     const body = { amount, ...(date && { date }) }
-    const response = await apiClient.post('/api/nutrition/water', body)
+    const response = await apiClient.post<{ waterIntake: number; date: Date }>('/api/nutrition/water', body)
     return response.data
   },
 }

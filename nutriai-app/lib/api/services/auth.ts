@@ -1,7 +1,7 @@
 // Authentication API service
 import { apiClient } from '../client'
 import type { AuthTokens, GuestLoginResponse } from '../../../types/api'
-import type { UserWithProfile } from '../../../types'
+import type { UserWithProfile } from '../../../types/user'
 
 export interface LoginRequest {
   email: string

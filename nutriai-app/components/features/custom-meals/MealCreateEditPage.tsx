@@ -118,7 +118,7 @@ export function MealCreateEditPage({ meal, onSave, onBack, onDelete }: MealCreat
       totalCarbG: Number(totals.carbG.toFixed(1)),
       instructions,
       isPublic: isPublic || false,
-      createdAt: meal?.createdAt ? new Date(meal.createdAt) : new Date(),
+      createdAt: meal?.createdAt ?? new Date().toISOString(),
       totalNutrients: {
         calories: totals.calories,
         proteinG: Number(totals.proteinG.toFixed(1)),

@@ -1,6 +1,11 @@
 // Exercises API service
 import { apiClient } from '../client'
-import type { ExerciseLog, ExerciseTemplate } from '../../../types'
+import type {
+  ExerciseLog,
+  ExerciseTemplate,
+  ExerciseRecommendation,
+  WeeklyExerciseSummary,
+} from '../../../types'
 import type { PaginatedResponse } from '../../../types/api'
 
 export interface ExerciseLogParams {
@@ -174,11 +179,7 @@ export const exercisesService = {
     intensityLevel?: string
     durationMin?: number
     limit?: number 
-  }): Promise<{
-    recommended: ExerciseTemplate[]
-    reasoning: string[]
-    personalizedSuggestions: string[]
-  }> {
+  }): Promise<ExerciseRecommendation> {
     const searchParams = new URLSearchParams()
     
     if (params?.category) searchParams.set('category', params.category)
@@ -186,31 +187,13 @@ export const exercisesService = {
     if (params?.durationMin) searchParams.set('durationMin', params.durationMin.toString())
     if (params?.limit) searchParams.set('limit', params.limit.toString())
 
-    const response = await apiClient.get(`/api/exercises/recommendations?${searchParams}`)
+    const response = await apiClient.get<ExerciseRecommendation>(`/api/exercises/recommendations?${searchParams}`)
     return response.data
   },
 
   // Get weekly exercise summary
-  async getWeeklyExerciseSummary(startDate: string): Promise<{
-    startDate: string
-    endDate: string
-    totalExercises: number
-    totalDurationMin: number
-    totalCaloriesBurned: number
-    dailyBreakdown: Array<{
-      date: string
-      exercises: number
-      durationMin: number
-      caloriesBurned: number
-    }>
-    weeklyGoalProgress: {
-      targetDays: number
-      completedDays: number
-      targetMinutes: number
-      completedMinutes: number
-    }
-  }> {
-    const response = await apiClient.get(`/api/exercises/weekly-summary?startDate=${startDate}`)
+  async getWeeklyExerciseSummary(startDate: string): Promise<WeeklyExerciseSummary> {
+    const response = await apiClient.get<WeeklyExerciseSummary>(`/api/exercises/weekly-summary?startDate=${startDate}`)
     return response.data
   },
 }

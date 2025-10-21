@@ -21,14 +21,14 @@ const convertToFullExerciseLog = (simplifiedExercise: any, userId: string): Exer
   return {
     id: simplifiedExercise.id,
     userId,
-    templateId: null,
+    templateId: simplifiedExercise.templateId ?? 'template-custom',
     templateName: simplifiedExercise.name,
     durationMin: simplifiedExercise.durationMin,
     caloriesBurned: simplifiedExercise.caloriesBurned,
-    intensityLevel: simplifiedExercise.intensityLevel,
-    performedAt: new Date(simplifiedExercise.date + 'T12:00:00Z'),
+    intensityLevel: simplifiedExercise.intensityLevel ?? 'medium',
+    performedAt: new Date(`${simplifiedExercise.date}T12:00:00Z`).toISOString(),
     notes: simplifiedExercise.notes || '',
-    createdAt: new Date(),
+    createdAt: new Date().toISOString(),
   }
 }
 
@@ -155,8 +155,8 @@ export const exercisesHandlers = [
       userId,
       ...body,
       templateName: body.templateName.trim(),
-      performedAt: body.performedAt || new Date(),
-      createdAt: new Date(),
+      performedAt: body.performedAt || new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     }
 
     mockExerciseLogsDatabase.set(newExercise.id, newExercise)

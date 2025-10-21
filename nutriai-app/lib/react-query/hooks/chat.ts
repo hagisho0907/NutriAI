@@ -160,9 +160,12 @@ export function useSendMessage() {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: queryKeys.chat.all })
 
+      const sessionId = 'default-session'
+
       // Create optimistic user message
       const optimisticUserMessage: ChatMessage = {
         id: `temp_user_${Date.now()}`,
+        sessionId,
         role: 'user',
         content: newMessage.content,
         createdAt: new Date().toISOString(),
@@ -172,10 +175,10 @@ export function useSendMessage() {
       // Create optimistic AI message (loading state)
       const optimisticAiMessage: ChatMessage = {
         id: `temp_ai_${Date.now()}`,
+        sessionId,
         role: 'assistant',
         content: '...',
         createdAt: new Date(Date.now() + 1000).toISOString(),
-        isLoading: true,
       }
 
       // Update chat messages cache
@@ -364,8 +367,10 @@ export function useStreamMessage() {
       const reader = stream.getReader()
       
       let aiResponse = ''
+      const sessionId = 'default-session'
       const userMessage: ChatMessage = {
         id: `user_${Date.now()}`,
+        sessionId,
         role: 'user',
         content: messageData.content,
         createdAt: new Date().toISOString(),
@@ -374,10 +379,10 @@ export function useStreamMessage() {
 
       const aiMessage: ChatMessage = {
         id: `ai_${Date.now()}`,
+        sessionId,
         role: 'assistant',
         content: '',
         createdAt: new Date(Date.now() + 1000).toISOString(),
-        isStreaming: true,
       }
 
       // Add initial messages to cache

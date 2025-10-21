@@ -4,7 +4,7 @@ import { authService, type LoginRequest, type RegisterRequest } from '../../api/
 import { queryKeys, getRelatedQueryKeys } from '../query-keys'
 import { STALE_TIME, CACHE_TIME } from '../config'
 import type { GuestLoginResponse, AuthTokens } from '../../../types/api'
-import type { UserWithProfile } from '../../../types'
+import type { UserWithProfile } from '../../../types/user'
 
 // Auth query hooks
 

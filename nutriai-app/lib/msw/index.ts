@@ -16,13 +16,13 @@ export const setupMSW = async () => {
 
   if (typeof window !== 'undefined') {
     // Browser environment
-    const { startBrowserMocking } = await import('./browser')
-    await startBrowserMocking()
+    const { startMocking } = await import('./browser')
+    await startMocking()
     console.log('MSW: Browser mocking enabled')
   } else {
     // Node.js environment (SSR, tests, etc.)
-    const { startNodeMocking } = await import('./node')
-    startNodeMocking()
+    const { startMocking } = await import('./node')
+    startMocking()
     console.log('MSW: Node.js mocking enabled')
   }
 }

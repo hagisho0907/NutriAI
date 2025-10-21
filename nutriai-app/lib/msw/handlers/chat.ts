@@ -177,6 +177,7 @@ export const chatHandlers = [
     const body = await request.json() as { 
       content: string
       context?: any
+      sessionId?: string
     }
 
     // Validate required fields
@@ -211,8 +212,11 @@ export const chatHandlers = [
     }
 
     // Create user message
+    const sessionId = body.sessionId ?? 'default-session'
+
     const userMessage: ChatMessage = {
       id: `msg_${Date.now()}_user`,
+      sessionId,
       role: 'user',
       content: body.content.trim(),
       createdAt: new Date().toISOString(),
@@ -224,6 +228,7 @@ export const chatHandlers = [
     // Generate AI response
     const aiResponse: ChatMessage = {
       id: `msg_${Date.now()}_ai`,
+      sessionId,
       role: 'assistant',
       content: getMockAIResponse(body.content),
       createdAt: new Date(Date.now() + 1000).toISOString(), // 1 second later
@@ -333,8 +338,10 @@ export const chatHandlers = [
     mockChatMessagesDatabase.clear()
 
     // Add welcome message back
+    const sessionId = 'default-session'
     const welcomeMessage: ChatMessage = {
       id: 'welcome',
+      sessionId,
       role: 'assistant',
       content: 'こんにちは！栄養、トレーニング、モチベーションについて何でも相談してください。',
       createdAt: new Date().toISOString(),

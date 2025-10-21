@@ -1,6 +1,14 @@
 // Foods API service
 import { apiClient } from '../client'
-import type { Food, CustomFood } from '../../../types'
+import type {
+  Food,
+  CustomFood,
+  FoodRecommendation,
+  FoodAlternatives,
+  FoodComparison,
+  FoodUsageStats,
+  BatchBarcodeSearchResult,
+} from '../../../types'
 import type { PaginatedResponse } from '../../../types/api'
 
 export interface FoodSearchParams {
@@ -156,11 +164,7 @@ export const foodsService = {
     dietaryRestrictions?: string[]
     preferredCategories?: string[]
     limit?: number
-  }): Promise<{
-    recommended: Food[]
-    reasoning: string[]
-    nutritionFocus: string[]
-  }> {
+  }): Promise<FoodRecommendation> {
     const searchParams = new URLSearchParams()
     
     if (params?.goal) searchParams.set('goal', params.goal)
@@ -168,7 +172,7 @@ export const foodsService = {
     if (params?.preferredCategories) searchParams.set('preferredCategories', params.preferredCategories.join(','))
     if (params?.limit) searchParams.set('limit', params.limit.toString())
 
-    const response = await apiClient.get(`/api/foods/recommendations?${searchParams}`)
+    const response = await apiClient.get<FoodRecommendation>(`/api/foods/recommendations?${searchParams}`)
     return response.data
   },
 
@@ -178,19 +182,7 @@ export const foodsService = {
     higherProtein?: boolean
     lowerCarbs?: boolean
     sameFoodGroup?: boolean
-  }): Promise<{
-    alternatives: Food[]
-    comparisons: Array<{
-      food: Food
-      nutritionDifference: {
-        calories: number
-        proteinG: number
-        fatG: number
-        carbG: number
-      }
-      improvementScore: number
-    }>
-  }> {
+  }): Promise<FoodAlternatives> {
     const searchParams = new URLSearchParams()
     
     if (criteria?.lowerCalories) searchParams.set('lowerCalories', 'true')
@@ -198,32 +190,13 @@ export const foodsService = {
     if (criteria?.lowerCarbs) searchParams.set('lowerCarbs', 'true')
     if (criteria?.sameFoodGroup) searchParams.set('sameFoodGroup', 'true')
 
-    const response = await apiClient.get(`/api/foods/${foodId}/alternatives?${searchParams}`)
+    const response = await apiClient.get<FoodAlternatives>(`/api/foods/${foodId}/alternatives?${searchParams}`)
     return response.data
   },
 
   // Get nutrition comparison between foods
-  async compareFoods(foodIds: string[]): Promise<{
-    foods: Food[]
-    comparison: {
-      perServing: Record<string, {
-        calories: number
-        proteinG: number
-        fatG: number
-        carbG: number
-        fiberG?: number
-      }>
-      per100g: Record<string, {
-        calories: number
-        proteinG: number
-        fatG: number
-        carbG: number
-        fiberG?: number
-      }>
-    }
-    recommendations: string[]
-  }> {
-    const response = await apiClient.post('/api/foods/compare', { foodIds })
+  async compareFoods(foodIds: string[]): Promise<FoodComparison> {
+    const response = await apiClient.post<FoodComparison>('/api/foods/compare', { foodIds })
     return response.data
   },
 
@@ -246,23 +219,8 @@ export const foodsService = {
   },
 
   // Get food usage statistics
-  async getFoodUsageStats(foodId: string): Promise<{
-    food: Food
-    usageCount: number
-    lastUsed: string
-    averageQuantity: number
-    nutritionContribution: {
-      dailyCaloriesPercent: number
-      dailyProteinPercent: number
-      dailyFatPercent: number
-      dailyCarbPercent: number
-    }
-    trends: {
-      usageFrequency: 'increasing' | 'decreasing' | 'stable'
-      quantityTrend: 'increasing' | 'decreasing' | 'stable'
-    }
-  }> {
-    const response = await apiClient.get(`/api/foods/${foodId}/stats`)
+  async getFoodUsageStats(foodId: string): Promise<FoodUsageStats> {
+    const response = await apiClient.get<FoodUsageStats>(`/api/foods/${foodId}/stats`)
     return response.data
   },
 
@@ -292,16 +250,13 @@ export const foodsService = {
     if (params.limit) searchParams.set('limit', params.limit.toString())
     if (params.offset) searchParams.set('offset', params.offset.toString())
 
-    const response = await apiClient.get(`/api/foods/search/advanced?${searchParams}`)
+    const response = await apiClient.get<PaginatedResponse<Food & { relevanceScore?: number }>>(`/api/foods/search/advanced?${searchParams}`)
     return response.data
   },
 
   // Get foods by multiple barcodes (batch lookup)
-  async batchBarcodeSearch(barcodes: string[]): Promise<{
-    found: Array<{ barcode: string; food: Food }>
-    notFound: string[]
-  }> {
-    const response = await apiClient.post('/api/foods/barcode/batch', { barcodes })
+  async batchBarcodeSearch(barcodes: string[]): Promise<BatchBarcodeSearchResult> {
+    const response = await apiClient.post<BatchBarcodeSearchResult>('/api/foods/barcode/batch', { barcodes })
     return response.data
   },
 }

@@ -32,7 +32,7 @@ const convertToFullMeal = (simplifiedMeal: any, userId: string): Meal => {
     id: simplifiedMeal.id,
     userId,
     mealType: simplifiedMeal.mealType,
-    loggedAt: new Date(simplifiedMeal.date + 'T12:00:00Z'),
+    loggedAt: new Date(simplifiedMeal.date + 'T12:00:00Z').toISOString(),
     source: 'manual',
     aiEstimated: false,
     totalCalories: totalNutrition.calories,
@@ -51,13 +51,12 @@ const convertToFullMeal = (simplifiedMeal: any, userId: string): Meal => {
       fatG: item.fatG,
       carbG: item.carbG,
       fiberG: item.fiberG || 0,
-      order: index,
       confidence: 1.0,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     })),
     notes: simplifiedMeal.notes || '',
     photoUrl: simplifiedMeal.photoUrl,
-    createdAt: new Date(),
+    createdAt: new Date().toISOString(),
   }
 }
 
@@ -73,9 +72,9 @@ mockCustomMeals.forEach((customMeal, index) => {
     id: customMeal.id,
     userId: '1',
     name: customMeal.name,
-    description: customMeal.instructions || '',
+    instructions: customMeal.instructions || '',
     photoUrl: customMeal.photoUrl,
-    isPublic: customMeal.isPublic,
+    isPublic: customMeal.isPublic ?? false,
     totalNutrition: {
       calories: customMeal.totalCalories,
       proteinG: customMeal.totalProteinG,
@@ -83,16 +82,21 @@ mockCustomMeals.forEach((customMeal, index) => {
       carbG: customMeal.totalCarbG,
       fiberG: 0,
       sugarG: 0,
-      sodiumMg: 0,
     },
     foods: customMeal.foods.map(food => ({
       foodId: food.foodId,
       foodName: food.foodName,
       quantity: food.quantity,
       unit: food.unit,
+      nutrition: {
+        calories: food.calories,
+        proteinG: food.proteinG,
+        fatG: food.fatG,
+        carbG: food.carbG,
+      },
     })),
-    createdAt: new Date(customMeal.createdAt),
-    updatedAt: new Date(customMeal.createdAt),
+    createdAt: new Date(customMeal.createdAt).toISOString(),
+    updatedAt: new Date(customMeal.createdAt).toISOString(),
   }
   mockMealTemplatesDatabase.set(template.id, template)
 })
@@ -220,16 +224,15 @@ export const mealsHandlers = [
       totalCarbG: totals.carbG,
       source: body.source || 'manual',
       aiEstimated: body.aiEstimated || false,
-      loggedAt: body.loggedAt || new Date(),
+      loggedAt: body.loggedAt || new Date().toISOString(),
       items: body.items.map((item, index) => ({
         ...item,
         id: item.id || `item_${Date.now()}_${index}`,
         mealId: '',
-        order: item.order !== undefined ? item.order : index,
         confidence: item.confidence || 1.0,
-        createdAt: new Date(),
+        createdAt: item.createdAt || new Date().toISOString(),
       })),
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     }
 
     // Update meal item IDs to reference the meal
@@ -442,8 +445,8 @@ export const mealsHandlers = [
       ...body,
       name: body.name.trim(),
       isPublic: body.isPublic || false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     }
 
     mockMealTemplatesDatabase.set(newTemplate.id, newTemplate)
@@ -489,7 +492,7 @@ export const mealsHandlers = [
       ...body,
       id: templateId, // Ensure ID is not overwritten
       userId, // Ensure userId is not overwritten
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     }
 
     mockMealTemplatesDatabase.set(templateId, updatedTemplate)
@@ -552,7 +555,7 @@ export const mealsHandlers = [
     }
 
     const templateId = params.id as string
-    const body = await request.json() as { mealType: string; loggedAt?: string }
+    const body = await request.json() as { mealType: Meal['mealType']; loggedAt?: string }
 
     const template = mockMealTemplatesDatabase.get(templateId)
     if (!template) {
@@ -572,7 +575,7 @@ export const mealsHandlers = [
       id: `meal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       userId,
       mealType: body.mealType,
-      loggedAt: body.loggedAt ? new Date(body.loggedAt) : new Date(),
+      loggedAt: body.loggedAt ? new Date(body.loggedAt).toISOString() : new Date().toISOString(),
       source: 'template',
       aiEstimated: false,
       totalCalories: template.totalNutrition.calories,
@@ -591,13 +594,12 @@ export const mealsHandlers = [
         fatG: Math.round((template.totalNutrition.fatG / template.foods.length)),
         carbG: Math.round((template.totalNutrition.carbG / template.foods.length)),
         fiberG: 0,
-        order: index,
         confidence: 1.0,
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
       })),
       notes: `Created from template: ${template.name}`,
       photoUrl: template.photoUrl,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     }
 
     // Update meal item IDs to reference the meal

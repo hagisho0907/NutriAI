@@ -85,6 +85,33 @@ export interface CreateMealTemplateRequest {
   isPublic?: boolean;
 }
 
+export interface MealAnalysis {
+  meal: Meal;
+  nutritionBreakdown: {
+    caloriesPerItem: { itemName: string; calories: number }[];
+    macroDistribution: { protein: number; fat: number; carbs: number };
+    micronutrients?: Record<string, number>;
+  };
+  aiInsights: {
+    healthScore: number;
+    recommendations: string[];
+    improvements: string[];
+  };
+}
+
+export interface MealStatistics {
+  totalMeals: number;
+  averageCaloriesPerMeal: number;
+  mostCommonMealType: string;
+  nutritionTrends: Array<{
+    date: string;
+    totalCalories: number;
+    totalProtein: number;
+    totalFat: number;
+    totalCarbs: number;
+  }>;
+}
+
 // AI meal estimation
 export interface MealEstimationRequest {
   photoUrl: string;

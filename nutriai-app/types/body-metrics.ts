@@ -7,12 +7,15 @@ export interface BodyMetrics {
   id: string;
   userId: string;
   recordedOn: string; // ISO date format (YYYY-MM-DD)
+  measurementDate?: string | Date;
   weightKg: number;
   bodyFatPct?: number;
   skeletalMuscleKg?: number;
+  muscleMassKg?: number;
   bmi?: number; // Calculated: weight / (height/100)^2
   visceralFatLevel?: number;
   basalMetabolicRate?: number; // kcal/day
+  bmr?: number;
   bodyAge?: number;
   notes?: string;
   source: MetricsSource;

@@ -80,7 +80,7 @@ export function useWaterIntake(date: string) {
       const dailyNutrition = await nutritionService.getDailyNutrition(date)
       return {
         date,
-        waterMl: dailyNutrition.waterMl || 0,
+        waterMl: dailyNutrition.waterIntake || 0,
         target: 2500, // Default target - this could come from goals
       }
     },
@@ -251,11 +251,11 @@ export function useNutritionProgress(date: string) {
       nutrition: dailyNutrition,
       goals,
       progress: {
-        caloriesPercent: goals.caloriesKcal ? (dailyNutrition.caloriesKcal / goals.caloriesKcal) * 100 : 0,
-        proteinPercent: goals.proteinG ? (dailyNutrition.proteinG / goals.proteinG) * 100 : 0,
-        fatPercent: goals.fatG ? (dailyNutrition.fatG / goals.fatG) * 100 : 0,
-        carbPercent: goals.carbG ? (dailyNutrition.carbG / goals.carbG) * 100 : 0,
-        waterPercent: goals.waterMl ? ((dailyNutrition.waterMl || 0) / goals.waterMl) * 100 : 0,
+        caloriesPercent: goals.dailyTargets.calories ? (dailyNutrition.totalNutrients.calories / goals.dailyTargets.calories) * 100 : 0,
+        proteinPercent: goals.dailyTargets.protein ? (dailyNutrition.totalNutrients.protein / goals.dailyTargets.protein) * 100 : 0,
+        fatPercent: goals.dailyTargets.fat ? (dailyNutrition.totalNutrients.fat / goals.dailyTargets.fat) * 100 : 0,
+        carbPercent: goals.dailyTargets.carbs ? (dailyNutrition.totalNutrients.carbs / goals.dailyTargets.carbs) * 100 : 0,
+        waterPercent: goals.dailyTargets.waterMl ? ((dailyNutrition.waterIntake || 0) / goals.dailyTargets.waterMl) * 100 : 0,
       },
     } : undefined,
   }
@@ -282,13 +282,13 @@ export function useWeeklyNutritionAverage(startDate: string) {
       // Calculate averages
       const total = history.items.reduce(
         (acc, day) => ({
-          caloriesKcal: acc.caloriesKcal + day.caloriesKcal,
-          proteinG: acc.proteinG + day.proteinG,
-          fatG: acc.fatG + day.fatG,
-          carbG: acc.carbG + day.carbG,
-          waterMl: acc.waterMl + (day.waterMl || 0),
+          calories: acc.calories + (day.totalNutrients.calories || 0),
+          protein: acc.protein + (day.totalNutrients.protein || 0),
+          fat: acc.fat + (day.totalNutrients.fat || 0),
+          carbs: acc.carbs + (day.totalNutrients.carbs || 0),
+          water: acc.water + (day.waterIntake || 0),
         }),
-        { caloriesKcal: 0, proteinG: 0, fatG: 0, carbG: 0, waterMl: 0 }
+        { calories: 0, protein: 0, fat: 0, carbs: 0, water: 0 }
       )
 
       const count = history.items.length
@@ -298,11 +298,11 @@ export function useWeeklyNutritionAverage(startDate: string) {
         endDate: endDateStr,
         daysCount: count,
         averages: {
-          caloriesKcal: Math.round(total.caloriesKcal / count),
-          proteinG: Math.round((total.proteinG / count) * 10) / 10,
-          fatG: Math.round((total.fatG / count) * 10) / 10,
-          carbG: Math.round((total.carbG / count) * 10) / 10,
-          waterMl: Math.round(total.waterMl / count),
+          caloriesKcal: Math.round(total.calories / count),
+          proteinG: Math.round((total.protein / count) * 10) / 10,
+          fatG: Math.round((total.fat / count) * 10) / 10,
+          carbG: Math.round((total.carbs / count) * 10) / 10,
+          waterMl: Math.round(total.water / count),
         },
       }
     },

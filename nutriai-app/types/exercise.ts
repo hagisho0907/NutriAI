@@ -81,3 +81,29 @@ export interface CreateExerciseTemplateRequest {
   defaultDurationMin?: number;
   defaultCalories?: number;
 }
+
+export interface ExerciseRecommendation {
+  recommended: ExerciseTemplate[];
+  reasoning: string[];
+  personalizedSuggestions: string[];
+}
+
+export interface WeeklyExerciseSummary {
+  startDate: string;
+  endDate: string;
+  totalExercises: number;
+  totalDurationMin: number;
+  totalCaloriesBurned: number;
+  dailyBreakdown: Array<{
+    date: string;
+    exercises: number;
+    durationMin: number;
+    caloriesBurned: number;
+  }>;
+  weeklyGoalProgress: {
+    targetDays: number;
+    completedDays: number;
+    targetMinutes: number;
+    completedMinutes: number;
+  };
+}
