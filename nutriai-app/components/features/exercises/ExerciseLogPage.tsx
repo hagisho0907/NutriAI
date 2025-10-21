@@ -33,12 +33,13 @@ import {
   Trash2,
   Flame,
 } from 'lucide-react';
-import { mockExercises, mockExerciseTemplates, type Exercise } from '../../../lib/mockData';
+import { mockExercises, mockExerciseTemplates } from '../../../lib/mockData';
+import type { ExerciseLog } from '../../../types/exercise';
 import { toast } from 'sonner';
 
 export function ExerciseLogPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [exercises, setExercises] = useState<Exercise[]>(mockExercises);
+  const [exercises, setExercises] = useState<ExerciseLog[]>(mockExercises as any);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   // Form state
@@ -50,10 +51,10 @@ export function ExerciseLogPage() {
 
   // Get exercises for selected date
   const dateStr = selectedDate.toISOString().split('T')[0];
-  const dayExercises = exercises.filter((e) => e.date === dateStr);
+  const dayExercises = exercises.filter((e) => (e as any).date === dateStr);
 
   // Calculate daily total
-  const dailyTotal = dayExercises.reduce((sum, ex) => sum + ex.caloriesBurned, 0);
+  const dailyTotal = dayExercises.reduce((sum, ex) => sum + ((ex as any).caloriesBurned || 0), 0);
 
   const calculateCalories = () => {
     const template = mockExerciseTemplates.find((t) => t.id === selectedTemplate);
@@ -104,7 +105,7 @@ export function ExerciseLogPage() {
 
     const calories = calculateCalories();
 
-    const newExercise: Exercise = {
+    const newExercise = {
       id: `${Date.now()}`,
       date: dateStr,
       name: template.name,
@@ -114,7 +115,7 @@ export function ExerciseLogPage() {
       notes,
     };
 
-    setExercises((prev) => [...prev, newExercise]);
+    setExercises((prev) => [...prev, newExercise as any]);
     setIsAddDialogOpen(false);
     toast.success('運動を記録しました');
   };
@@ -258,17 +259,17 @@ export function ExerciseLogPage() {
                       <Activity className="w-5 h-5 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{exercise.name}</p>
+                      <p className="font-medium truncate">{(exercise as any).name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {exercise.durationMin}分 • {intensityLabels[exercise.intensityLevel]}
+                        {(exercise as any).durationMin}分 • {intensityLabels[(exercise as any).intensityLevel as keyof typeof intensityLabels]}
                       </p>
-                      {exercise.notes && (
+                      {(exercise as any).notes && (
                         <p className="text-xs text-muted-foreground mt-1 truncate">
-                          {exercise.notes}
+                          {(exercise as any).notes}
                         </p>
                       )}
                       <p className="text-sm text-primary mt-1">
-                        {exercise.caloriesBurned} kcal
+                        {(exercise as any).caloriesBurned} kcal
                       </p>
                     </div>
                   </div>

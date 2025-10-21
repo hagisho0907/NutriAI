@@ -12,7 +12,9 @@ import {
   Calendar as CalendarIcon,
   Trash2,
 } from 'lucide-react';
-import { mockMeals, type Food, type Meal, type MealItem } from '../../../lib/mockData';
+import { mockMeals } from '../../../lib/mockData';
+import type { Food, MealItem } from '../../../types/food';
+import type { Meal } from '../../../types/meal';
 import { toast } from 'sonner';
 import { FoodSelectionPage } from './FoodSelectionPage';
 import { AiPhotoEstimatePage } from './AiPhotoEstimatePage';

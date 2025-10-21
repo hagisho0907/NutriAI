@@ -237,11 +237,11 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                             />
                           </svg>
                           <div className="absolute flex flex-col items-center">
-                            <div className="text-xl">{summary.carbG}</div>
-                            <div className="text-xs text-gray-600">/{summary.targetCarbG}g</div>
+                            <div className="text-xl">{(summary as any).carbG || 0}</div>
+                            <div className="text-xs text-gray-600">/{(summary as any).targetCarbG || 0}g</div>
                           </div>
                         </div>
-                        <div className="text-xs text-gray-600">{summary.targetCarbG - summary.carbG}g 残り</div>
+                        <div className="text-xs text-gray-600">{((summary as any).targetCarbG || 0) - ((summary as any).carbG || 0)}g 残り</div>
                       </div>
 
                       {/* Fat */}
@@ -270,11 +270,11 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                             />
                           </svg>
                           <div className="absolute flex flex-col items-center">
-                            <div className="text-xl">{summary.fatG}</div>
-                            <div className="text-xs text-gray-600">/{summary.targetFatG}g</div>
+                            <div className="text-xl">{(summary as any).fatG || 0}</div>
+                            <div className="text-xs text-gray-600">/{(summary as any).targetFatG || 0}g</div>
                           </div>
                         </div>
-                        <div className="text-xs text-gray-600">{summary.targetFatG - summary.fatG}g 残り</div>
+                        <div className="text-xs text-gray-600">{((summary as any).targetFatG || 0) - ((summary as any).fatG || 0)}g 残り</div>
                       </div>
 
                       {/* Protein */}
@@ -303,11 +303,11 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                             />
                           </svg>
                           <div className="absolute flex flex-col items-center">
-                            <div className="text-xl">{summary.proteinG}</div>
-                            <div className="text-xs text-gray-600">/{summary.targetProteinG}g</div>
+                            <div className="text-xl">{(summary as any).proteinG || 0}</div>
+                            <div className="text-xs text-gray-600">/{(summary as any).targetProteinG || 0}g</div>
                           </div>
                         </div>
-                        <div className="text-xs text-gray-600">{summary.targetProteinG - summary.proteinG}g 残り</div>
+                        <div className="text-xs text-gray-600">{((summary as any).targetProteinG || 0) - ((summary as any).proteinG || 0)}g 残り</div>
                       </div>
                     </div>
                   </div>
