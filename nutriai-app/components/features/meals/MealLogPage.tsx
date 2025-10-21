@@ -40,7 +40,7 @@ export function MealLogPage({
 
   // Get meals for selected date
   const dateStr = selectedDate.toISOString().split('T')[0];
-  const dayMeals = meals.filter((m) => (m as any).date === dateStr);
+  const dayMeals = meals.filter((m) => m.loggedAt.split('T')[0] === dateStr);
 
   // Calculate totals for each meal type
   const getMealTotals = (mealType: string) => {
@@ -101,8 +101,10 @@ export function MealLogPage({
   }) => {
     const totalCalories = data.macros.protein * 4 + data.macros.fat * 9 + data.macros.carb * 4;
 
-    const newItem = {
+    const newItem: MealItem = {
       id: `${Date.now()}`,
+      mealId: '',
+      foodId: `custom-${Date.now()}`,
       foodName: data.foodName,
       quantity: data.quantity,
       unit: data.unit,
@@ -110,11 +112,12 @@ export function MealLogPage({
       proteinG: data.macros.protein,
       fatG: data.macros.fat,
       carbG: data.macros.carb,
-    } as any;
+      createdAt: new Date().toISOString(),
+    };
 
     setMeals((prev) => {
       const existingMealIndex = prev.findIndex(
-        (m) => (m as any).date === dateStr && m.mealType === selectedMealType
+        (m) => m.loggedAt.split('T')[0] === dateStr && m.mealType === selectedMealType
       );
 
       if (existingMealIndex >= 0) {
@@ -129,14 +132,22 @@ export function MealLogPage({
         return updated;
       } else {
         // Create new meal
-        const newMeal = {
+        const newMeal: Meal = {
           id: `${Date.now()}`,
-          date: dateStr,
+          userId: 'current-user',
+          loggedAt: new Date().toISOString(),
           mealType: selectedMealType,
+          source: 'photo',
           items: [newItem],
           photoUrl: data.photoUrl,
           notes: data.description,
-        } as any;
+          aiEstimated: true,
+          totalCalories: totalCalories,
+          totalProteinG: data.macros.protein,
+          totalFatG: data.macros.fat,
+          totalCarbG: data.macros.carb,
+          createdAt: new Date().toISOString(),
+        };
         return [...prev, newMeal];
       }
     });
@@ -147,6 +158,8 @@ export function MealLogPage({
   const handleSelectRecentFood = (food: any) => {
     const newItem: MealItem = {
       id: `${Date.now()}`,
+      mealId: '',
+      foodId: food.id || `custom-${Date.now()}`,
       foodName: food.name,
       quantity: 1,
       unit: '人前',
@@ -154,11 +167,12 @@ export function MealLogPage({
       proteinG: Math.round(food.calories * 0.2 / 4),
       fatG: Math.round(food.calories * 0.3 / 9),
       carbG: Math.round(food.calories * 0.5 / 4),
+      createdAt: new Date().toISOString(),
     };
 
     setMeals((prev) => {
       const existingMealIndex = prev.findIndex(
-        (m) => (m as any).date === dateStr && m.mealType === selectedMealType
+        (m) => m.loggedAt.split('T')[0] === dateStr && m.mealType === selectedMealType
       );
 
       if (existingMealIndex >= 0) {
@@ -171,9 +185,17 @@ export function MealLogPage({
       } else {
         const newMeal: Meal = {
           id: `${Date.now()}`,
-          date: dateStr,
+          userId: 'current-user',
+          loggedAt: new Date().toISOString(),
           mealType: selectedMealType,
+          source: 'manual',
           items: [newItem],
+          aiEstimated: false,
+          totalCalories: newItem.calories,
+          totalProteinG: newItem.proteinG,
+          totalFatG: newItem.fatG,
+          totalCarbG: newItem.carbG,
+          createdAt: new Date().toISOString(),
         };
         return [...prev, newMeal];
       }
