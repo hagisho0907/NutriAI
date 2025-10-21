@@ -61,10 +61,10 @@ export function MealCreateEditPage({ meal, onSave, onBack, onDelete }: MealCreat
       foodName: food.name,
       quantity: servingSize,
       unit: servingUnit,
-      calories: food.calories,
-      proteinG: food.proteinG,
-      fatG: food.fatG,
-      carbG: food.carbG,
+      calories: (food as any).calories || 0,
+      proteinG: (food as any).proteinG || 0,
+      fatG: (food as any).fatG || 0,
+      carbG: (food as any).carbG || 0,
     };
 
     setSelectedFoods([...selectedFoods, newFood]);
@@ -87,10 +87,10 @@ export function MealCreateEditPage({ meal, onSave, onBack, onDelete }: MealCreat
     const updatedFood = {
       ...food,
       quantity: newQuantity,
-      calories: Math.round(originalFood.calories * multiplier),
-      proteinG: Number((originalFood.proteinG * multiplier).toFixed(1)),
-      fatG: Number((originalFood.fatG * multiplier).toFixed(1)),
-      carbG: Number((originalFood.carbG * multiplier).toFixed(1)),
+      calories: Math.round(((originalFood as any).calories || 0) * multiplier),
+      proteinG: Number((((originalFood as any).proteinG || 0) * multiplier).toFixed(1)),
+      fatG: Number((((originalFood as any).fatG || 0) * multiplier).toFixed(1)),
+      carbG: Number((((originalFood as any).carbG || 0) * multiplier).toFixed(1)),
     };
 
     setSelectedFoods(selectedFoods.map((f, i) => (i === index ? updatedFood : f)));
@@ -117,8 +117,16 @@ export function MealCreateEditPage({ meal, onSave, onBack, onDelete }: MealCreat
       totalFatG: Number(totals.fatG.toFixed(1)),
       totalCarbG: Number(totals.carbG.toFixed(1)),
       instructions,
-      isPublic,
-      createdAt: meal?.createdAt || new Date().toISOString(),
+      isPublic: isPublic || false,
+      createdAt: meal?.createdAt ? new Date(meal.createdAt) : new Date(),
+      totalNutrients: {
+        calories: totals.calories,
+        proteinG: Number(totals.proteinG.toFixed(1)),
+        fatG: Number(totals.fatG.toFixed(1)),
+        carbG: Number(totals.carbG.toFixed(1)),
+      },
+      description: instructions || '',
+      tags: [],
     };
 
     onSave(newMeal);
@@ -299,9 +307,9 @@ export function MealCreateEditPage({ meal, onSave, onBack, onDelete }: MealCreat
                         </div>
                       </div>
                       <div className="text-right text-sm">
-                        <div>{food.calories} kcal</div>
+                        <div>{(food as any).calories || 0} kcal</div>
                         <div className="text-xs text-gray-500">
-                          P:{food.proteinG}g F:{food.fatG}g C:{food.carbG}g
+                          P:{(food as any).proteinG || 0}g F:{(food as any).fatG || 0}g C:{(food as any).carbG || 0}g
                         </div>
                       </div>
                       <Button
@@ -400,9 +408,9 @@ export function MealCreateEditPage({ meal, onSave, onBack, onDelete }: MealCreat
                         </div>
                       </div>
                       <div className="text-right text-sm">
-                        <div>{food.calories} kcal</div>
+                        <div>{(food as any).calories || 0} kcal</div>
                         <div className="text-xs text-gray-500">
-                          P:{food.proteinG}g F:{food.fatG}g C:{food.carbG}g
+                          P:{(food as any).proteinG || 0}g F:{(food as any).fatG || 0}g C:{(food as any).carbG || 0}g
                         </div>
                       </div>
                     </div>

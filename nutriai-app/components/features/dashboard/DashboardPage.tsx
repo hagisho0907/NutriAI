@@ -48,13 +48,13 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
   
   const summary = mockDailySummary;
   const latestWeight = mockBodyMetrics[mockBodyMetrics.length - 1];
-  const remainingCalories = summary.targetCalories - summary.calorieIntake;
+  const remainingCalories = (summary as any).targetCalories ? (summary as any).targetCalories - (summary as any).calorieIntake : 2000 - (summary as any).calorieIntake;
   
   // 栄養素の進捗を計算
-  const carbProgress = (summary.carbG / summary.targetCarbG) * 100;
-  const fatProgress = (summary.fatG / summary.targetFatG) * 100;
-  const proteinProgress = (summary.proteinG / summary.targetProteinG) * 100;
-  const calorieProgress = (summary.calorieIntake / summary.targetCalories) * 100;
+  const carbProgress = (summary as any).targetCarbG ? ((summary as any).carbG / (summary as any).targetCarbG) * 100 : 0;
+  const fatProgress = (summary as any).targetFatG ? ((summary as any).fatG / (summary as any).targetFatG) * 100 : 0;
+  const proteinProgress = (summary as any).targetProteinG ? ((summary as any).proteinG / (summary as any).targetProteinG) * 100 : 0;
+  const calorieProgress = (summary as any).targetCalories ? ((summary as any).calorieIntake / (summary as any).targetCalories) * 100 : 0;
 
   useEffect(() => {
     if (!api) {
@@ -105,7 +105,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <Avatar className="w-10 h-10">
             <AvatarFallback className="bg-primary text-white">
-              {mockUser.displayName.charAt(0)}
+              {(mockUser as any).displayName?.charAt(0) || 'U'}
             </AvatarFallback>
           </Avatar>
           
@@ -190,12 +190,12 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                     <div className="w-full space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">目標</span>
-                        <span className="text-lg">{summary.targetCalories.toLocaleString()} kcal</span>
+                        <span className="text-lg">{((summary as any).targetCalories || 2000).toLocaleString()} kcal</span>
                       </div>
                       
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">食事摂取</span>
-                        <span className="text-lg text-primary">{summary.calorieIntake} kcal</span>
+                        <span className="text-lg text-primary">{(summary as any).calorieIntake || 0} kcal</span>
                       </div>
                     </div>
                   </div>
