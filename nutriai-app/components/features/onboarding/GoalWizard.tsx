@@ -68,7 +68,7 @@ export function GoalWizard() {
                 ステップ {step} / {totalSteps}
               </span>
             </div>
-            <button onClick={onComplete} className="text-sm text-muted-foreground hover:text-foreground">
+            <button onClick={() => router.push('/')} className="text-sm text-muted-foreground hover:text-foreground">
               スキップ
             </button>
           </div>
