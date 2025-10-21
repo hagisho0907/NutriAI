@@ -12,7 +12,6 @@ import {
   Calendar as CalendarIcon,
   Trash2,
 } from 'lucide-react';
-import { mockMeals } from '../../../lib/mockData';
 import type { Food, MealItem } from '../../../types/food';
 import type { Meal } from '../../../types/meal';
 import { toast } from 'sonner';
@@ -33,7 +32,7 @@ export function MealLogPage({
   onClearSelectedFood,
 }: MealLogPageProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [meals, setMeals] = useState<Meal[]>(mockMeals);
+  const [meals, setMeals] = useState<Meal[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('main');
   const [selectedMealType, setSelectedMealType] = useState<
     'breakfast' | 'lunch' | 'dinner' | 'snack'
@@ -41,7 +40,7 @@ export function MealLogPage({
 
   // Get meals for selected date
   const dateStr = selectedDate.toISOString().split('T')[0];
-  const dayMeals = meals.filter((m) => m.date === dateStr);
+  const dayMeals = meals.filter((m) => (m as any).date === dateStr);
 
   // Calculate totals for each meal type
   const getMealTotals = (mealType: string) => {
@@ -102,7 +101,7 @@ export function MealLogPage({
   }) => {
     const totalCalories = data.macros.protein * 4 + data.macros.fat * 9 + data.macros.carb * 4;
 
-    const newItem: MealItem = {
+    const newItem = {
       id: `${Date.now()}`,
       foodName: data.foodName,
       quantity: data.quantity,
@@ -111,11 +110,11 @@ export function MealLogPage({
       proteinG: data.macros.protein,
       fatG: data.macros.fat,
       carbG: data.macros.carb,
-    };
+    } as any;
 
     setMeals((prev) => {
       const existingMealIndex = prev.findIndex(
-        (m) => m.date === dateStr && m.mealType === selectedMealType
+        (m) => (m as any).date === dateStr && m.mealType === selectedMealType
       );
 
       if (existingMealIndex >= 0) {
@@ -130,14 +129,14 @@ export function MealLogPage({
         return updated;
       } else {
         // Create new meal
-        const newMeal: Meal = {
+        const newMeal = {
           id: `${Date.now()}`,
           date: dateStr,
           mealType: selectedMealType,
           items: [newItem],
           photoUrl: data.photoUrl,
           notes: data.description,
-        };
+        } as any;
         return [...prev, newMeal];
       }
     });
@@ -159,7 +158,7 @@ export function MealLogPage({
 
     setMeals((prev) => {
       const existingMealIndex = prev.findIndex(
-        (m) => m.date === dateStr && m.mealType === selectedMealType
+        (m) => (m as any).date === dateStr && m.mealType === selectedMealType
       );
 
       if (existingMealIndex >= 0) {
