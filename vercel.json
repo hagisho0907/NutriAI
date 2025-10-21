@@ -1,8 +1,8 @@
 {
-  "buildCommand": "cd nutriai-app && npm run build",
+  "buildCommand": "cd nutriai-app && npx next build",
   "outputDirectory": "nutriai-app/.next",
   "installCommand": "cd nutriai-app && npm install",
   "devCommand": "cd nutriai-app && npm run dev",
-  "framework": "nextjs",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./",
   "regions": ["hnd1"]
 }
