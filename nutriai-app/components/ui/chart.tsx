@@ -104,12 +104,12 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
-interface ChartTooltipContentProps
-  extends React.ComponentProps<"div">,
-    Pick<
-      React.ComponentProps<typeof RechartsPrimitive.Tooltip>,
-      "active" | "payload" | "label" | "labelFormatter" | "formatter"
-    > {
+interface ChartTooltipContentProps extends React.ComponentProps<"div"> {
+  active?: boolean;
+  payload?: any[];
+  label?: string | number;
+  labelFormatter?: (label: any, payload: any[]) => React.ReactNode;
+  formatter?: (value: any, name: any, props: any, index?: number, payload?: any) => React.ReactNode;
   hideLabel?: boolean;
   hideIndicator?: boolean;
   indicator?: "line" | "dot" | "dashed";
