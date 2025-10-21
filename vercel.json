@@ -1,0 +1,8 @@
+{
+  "buildCommand": "cd nutriai-app && npm run build",
+  "outputDirectory": "nutriai-app/.next",
+  "installCommand": "cd nutriai-app && npm install",
+  "devCommand": "cd nutriai-app && npm run dev",
+  "framework": "nextjs",
+  "regions": ["hnd1"]
+}
