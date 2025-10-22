@@ -149,12 +149,16 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
           <CarouselContent>
             {/* Card 1: Calories */}
             <CarouselItem>
-              <Card className="border-0 shadow-sm h-[340px]">
-                <CardContent className="p-6 h-full flex flex-col">
-                  <h2 className="mb-3">カロリー</h2>
-                  <p className="text-sm text-gray-600 mb-4">残り = 目標摂取 - 食事摂取</p>
+              <Card>
+                <CardHeader>
+                  <CardTitle>カロリー</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center mb-4">
+                    <p className="text-sm text-muted-foreground">残り = 目標摂取 - 食事摂取</p>
+                  </div>
                   
-                  <div className="flex-1 flex flex-col items-center justify-center">
+                  <div className="flex flex-col items-center justify-center">
                     {/* Circular Progress */}
                     <div className="relative flex items-center justify-center mb-4">
                       <svg className="w-36 h-36 transform -rotate-90">
@@ -205,11 +209,12 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
 
             {/* Card 2: Macronutrients */}
             <CarouselItem>
-              <Card className="border-0 shadow-sm h-[340px]">
-                <CardContent className="p-6 h-full flex flex-col">
-                  <h2 className="mb-3">主要栄養素</h2>
-                  
-                  <div className="flex-1 flex flex-col items-center justify-center">
+              <Card>
+                <CardHeader>
+                  <CardTitle>主要栄養素</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col items-center justify-center">
                     <div className="grid grid-cols-3 gap-6 mb-4">
                       {/* Carbs */}
                       <div className="flex flex-col items-center">
