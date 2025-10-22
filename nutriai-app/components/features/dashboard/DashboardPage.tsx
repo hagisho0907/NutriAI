@@ -6,7 +6,7 @@ import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import { Avatar, AvatarFallback } from '../../ui/avatar';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '../../ui/drawer';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../ui/dialog';
 import { Calendar } from '../../ui/calendar';
 import { Settings, ChevronLeft, ChevronRight, Utensils, Scale, CheckCircle2, Circle, Calendar as CalendarIcon } from 'lucide-react';
 import { mockDailySummary, mockUser, mockBodyMetrics } from '../../../lib/mockData';
@@ -136,28 +136,28 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             <ChevronLeft className="h-5 w-5" />
           </Button>
 
-          <Drawer>
-            <DrawerTrigger asChild>
+          <Dialog>
+            <DialogTrigger asChild>
               <Button variant="outline" className="flex-1 justify-start gap-2">
                 <CalendarIcon className="h-4 w-4" />
                 {formatDate(selectedDate)}
               </Button>
-            </DrawerTrigger>
-            <DrawerContent>
-              <DrawerHeader>
-                <DrawerTitle>日付を選択</DrawerTitle>
-              </DrawerHeader>
-              <div className="p-4">
+            </DialogTrigger>
+            <DialogContent className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle>日付を選択</DialogTitle>
+              </DialogHeader>
+              <div className="flex justify-center">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
                   onSelect={(date) => date && setSelectedDate(date)}
                   initialFocus
-                  className="rounded-md border mx-auto"
+                  className="rounded-md border scale-90"
                 />
               </div>
-            </DrawerContent>
-          </Drawer>
+            </DialogContent>
+          </Dialog>
 
           <Button
             variant="ghost"
