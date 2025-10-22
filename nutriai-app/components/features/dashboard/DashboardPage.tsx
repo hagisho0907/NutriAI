@@ -111,16 +111,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-50">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <button
-            onClick={() => setShowProfileSettings(true)}
-            className="w-10 h-10 rounded-full hover:ring-2 hover:ring-primary/20 transition-all"
-          >
-            <Avatar className="w-10 h-10">
-              <AvatarFallback className="bg-primary text-white">
-                {(mockUser as any).displayName?.charAt(0) || 'U'}
-              </AvatarFallback>
-            </Avatar>
-          </button>
+          <div className="w-10"></div>
           
           <div className="flex items-center gap-2">
             <AppleIcon />
@@ -129,7 +120,10 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             </span>
           </div>
           
-          <button className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100">
+          <button 
+            onClick={() => setShowProfileSettings(true)}
+            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+          >
             <Settings className="w-6 h-6 text-gray-600" />
           </button>
         </div>
