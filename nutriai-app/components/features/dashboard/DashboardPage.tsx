@@ -123,23 +123,31 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       </div>
 
       {/* Date Navigation */}
-      <div className="bg-gray-50 border-b border-gray-200 px-4 py-3">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <button
+      <div className="bg-white border-b border-border px-4 py-4">
+        <div className="max-w-2xl mx-auto flex items-center justify-between gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handlePreviousDay}
-            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100"
+            className="h-9 w-9"
           >
-            <ChevronLeft className="w-6 h-6 text-gray-600" />
-          </button>
-          
-          <h1 className="text-foreground">{formatDate(selectedDate)}</h1>
-          
-          <button
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+
+          <div className="flex-1 text-center">
+            <span className="text-foreground font-medium">
+              {formatDate(selectedDate)}
+            </span>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleNextDay}
-            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100"
+            className="h-9 w-9"
           >
-            <ChevronRight className="w-6 h-6 text-gray-600" />
-          </button>
+            <ChevronRight className="h-5 w-5" />
+          </Button>
         </div>
       </div>
 
