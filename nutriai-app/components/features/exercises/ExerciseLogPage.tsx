@@ -21,7 +21,6 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '../../ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import {
   Activity,
   Dumbbell,
