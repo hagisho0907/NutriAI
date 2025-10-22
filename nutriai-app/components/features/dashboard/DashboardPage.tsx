@@ -506,7 +506,24 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
           <CardContent className="space-y-2">
             {summary.tasks.map((task, idx) => (
               <div key={idx} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
-                <div className="flex items-center gap-3">
+                <button
+                  className="flex items-center gap-3 flex-1 text-left"
+                  onClick={() => {
+                    if (task.status === 'pending') {
+                      // タスクを完了にマーク
+                      task.status = 'completed';
+                      task.completedAt = new Date().toISOString();
+                      setUpdateTrigger(prev => prev + 1);
+                      toast.success(`「${task.title}」を完了しました`);
+                    } else if (task.status === 'completed') {
+                      // 完了タスクを未完了に戻す
+                      task.status = 'pending';
+                      task.completedAt = undefined;
+                      setUpdateTrigger(prev => prev + 1);
+                      toast.success(`「${task.title}」を未完了に戻しました`);
+                    }
+                  }}
+                >
                   {task.status === 'completed' ? (
                     <CheckCircle2 className="w-5 h-5 text-primary" />
                   ) : (
@@ -515,7 +532,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                   <span className={task.status === 'completed' ? 'text-muted-foreground line-through' : ''}>
                     {task.title}
                   </span>
-                </div>
+                </button>
                 {task.status === 'pending' && (
                   <Button 
                     size="sm" 
