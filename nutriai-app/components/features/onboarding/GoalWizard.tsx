@@ -37,8 +37,8 @@ export function GoalWizard() {
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
-      // Complete onboarding and redirect to main app
-      router.push('/');
+      // Complete onboarding and redirect to dashboard
+      router.push('/dashboard');
     }
   };
 
@@ -68,7 +68,7 @@ export function GoalWizard() {
                 ステップ {step} / {totalSteps}
               </span>
             </div>
-            <button onClick={() => router.push('/')} className="text-sm text-muted-foreground hover:text-foreground">
+            <button onClick={() => router.push('/dashboard')} className="text-sm text-muted-foreground hover:text-foreground">
               スキップ
             </button>
           </div>

@@ -10,7 +10,7 @@ export function BottomNav() {
   const navItems = [
     { id: 'exercises', label: '運動', icon: Activity, href: '/exercises' },
     { id: 'meals', label: '食事', icon: Utensils, href: '/meals' },
-    { id: 'dashboard', label: 'ホーム', icon: Home, href: '/' },
+    { id: 'dashboard', label: 'ホーム', icon: Home, href: '/dashboard' },
     { id: 'analytics', label: '分析', icon: TrendingUp, href: '/analytics' },
     { id: 'chat', label: 'チャット', icon: MessageCircle, href: '/chat' },
   ];

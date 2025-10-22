@@ -36,6 +36,7 @@ export function LoginPage() {
 
   const handleLogin = () => {
     // In a real app, this would handle authentication
+    // For now, go to onboarding for new users
     router.push('/onboarding');
   };
 
