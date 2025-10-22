@@ -21,7 +21,7 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '../../ui/dialog';
-import { Calendar } from '../../ui/calendar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import {
   Activity,
   Dumbbell,
@@ -189,15 +189,81 @@ export function ExerciseLogPage() {
                 <DialogHeader>
                   <DialogTitle>日付を選択</DialogTitle>
                 </DialogHeader>
-                <div className="flex justify-center">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => date && setSelectedDate(date)}
-                    initialFocus
-                    weekStartsOn={1}
-                    className="rounded-md border scale-90"
-                  />
+                <div className="space-y-4 p-4">
+                  <div className="flex items-center justify-center gap-2">
+                    <Select
+                      value={selectedDate.getFullYear().toString()}
+                      onValueChange={(year) => {
+                        const newDate = new Date(selectedDate);
+                        newDate.setFullYear(parseInt(year));
+                        setSelectedDate(newDate);
+                      }}
+                    >
+                      <SelectTrigger className="w-20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 10 }, (_, i) => {
+                          const year = new Date().getFullYear() - 5 + i;
+                          return (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}年
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      value={(selectedDate.getMonth() + 1).toString()}
+                      onValueChange={(month) => {
+                        const newDate = new Date(selectedDate);
+                        newDate.setMonth(parseInt(month) - 1);
+                        setSelectedDate(newDate);
+                      }}
+                    >
+                      <SelectTrigger className="w-16">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 12 }, (_, i) => (
+                          <SelectItem key={i + 1} value={(i + 1).toString()}>
+                            {i + 1}月
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      value={selectedDate.getDate().toString()}
+                      onValueChange={(day) => {
+                        const newDate = new Date(selectedDate);
+                        newDate.setDate(parseInt(day));
+                        setSelectedDate(newDate);
+                      }}
+                    >
+                      <SelectTrigger className="w-16">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate() }, (_, i) => (
+                          <SelectItem key={i + 1} value={(i + 1).toString()}>
+                            {i + 1}日
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="text-center">
+                    <Button
+                      variant="outline"
+                      onClick={() => setSelectedDate(new Date())}
+                      className="text-primary"
+                    >
+                      今日
+                    </Button>
+                  </div>
                 </div>
               </DialogContent>
             </Dialog>
