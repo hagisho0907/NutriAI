@@ -6,7 +6,9 @@ import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import { Avatar, AvatarFallback } from '../../ui/avatar';
-import { Settings, ChevronLeft, ChevronRight, Utensils, Scale, CheckCircle2, Circle } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
+import { Calendar } from '../../ui/calendar';
+import { Settings, ChevronLeft, ChevronRight, Utensils, Scale, CheckCircle2, Circle, Calendar as CalendarIcon } from 'lucide-react';
 import { mockDailySummary, mockUser, mockBodyMetrics } from '../../../lib/mockData';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '../../ui/carousel';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../ui/collapsible';
@@ -134,11 +136,23 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             <ChevronLeft className="h-5 w-5" />
           </Button>
 
-          <div className="flex-1 text-center">
-            <span className="text-foreground font-medium">
-              {formatDate(selectedDate)}
-            </span>
-          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="flex-1 justify-start gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                {formatDate(selectedDate)}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="center" side="bottom" sideOffset={8}>
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                initialFocus
+                className="rounded-md border"
+              />
+            </PopoverContent>
+          </Popover>
 
           <Button
             variant="ghost"

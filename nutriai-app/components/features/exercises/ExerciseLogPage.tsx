@@ -178,11 +178,23 @@ export function ExerciseLogPage() {
               <ChevronLeft className="h-5 w-5" />
             </Button>
 
-            <div className="flex-1 text-center">
-              <span className="text-foreground font-medium">
-                {formatDate(selectedDate)}
-              </span>
-            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="flex-1 justify-start gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  {formatDate(selectedDate)}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="center" side="bottom" sideOffset={8}>
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  initialFocus
+                  className="rounded-md border"
+                />
+              </PopoverContent>
+            </Popover>
 
             <Button
               variant="ghost"
