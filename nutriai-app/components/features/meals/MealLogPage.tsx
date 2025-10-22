@@ -318,7 +318,7 @@ export function MealLogPage({
                   {formatDate(selectedDate)}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="center" side="bottom" sideOffset={8}>
+              <PopoverContent className="w-auto p-0" align="start" side="bottom" sideOffset={8}>
                 <Calendar
                   mode="single"
                   selected={selectedDate}
