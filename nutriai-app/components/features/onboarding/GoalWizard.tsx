@@ -53,7 +53,7 @@ export function GoalWizard() {
   };
 
   return (
-    <div className="min-h-screen bg-secondary p-4 flex flex-col">
+    <div className="min-h-screen bg-primary/5 p-4 flex flex-col">
       <div className="max-w-2xl w-full mx-auto flex-1 flex flex-col">
         {/* Header */}
         <div className="py-4">
