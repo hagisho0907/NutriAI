@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Button } from '../../ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '../../ui/drawer';
 import { Calendar } from '../../ui/calendar';
 import {
   Plus,
@@ -311,23 +311,28 @@ export function MealLogPage({
               <ChevronLeft className="h-5 w-5" />
             </Button>
 
-            <Popover>
-              <PopoverTrigger asChild>
+            <Drawer>
+              <DrawerTrigger asChild>
                 <Button variant="outline" className="flex-1 justify-start gap-2">
                   <CalendarIcon className="h-4 w-4" />
                   {formatDate(selectedDate)}
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 max-w-[calc(100vw-2rem)]" align="start" side="bottom" sideOffset={8}>
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  initialFocus
-                  className="rounded-md border max-w-full"
-                />
-              </PopoverContent>
-            </Popover>
+              </DrawerTrigger>
+              <DrawerContent>
+                <DrawerHeader>
+                  <DrawerTitle>日付を選択</DrawerTitle>
+                </DrawerHeader>
+                <div className="p-4">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => date && setSelectedDate(date)}
+                    initialFocus
+                    className="rounded-md border mx-auto"
+                  />
+                </div>
+              </DrawerContent>
+            </Drawer>
 
             <Button
               variant="ghost"
