@@ -17,6 +17,7 @@ import type { Meal } from '../../../types/meal';
 import { toast } from 'sonner';
 import { FoodSelectionPage } from './FoodSelectionPage';
 import { AiPhotoEstimatePage } from './AiPhotoEstimatePage';
+import { BarcodeSearchPage } from '../barcode/BarcodeSearchPage';
 
 interface MealLogPageProps {
   selectedFood?: Food | null;
@@ -24,7 +25,7 @@ interface MealLogPageProps {
   onClearSelectedFood?: () => void;
 }
 
-type ViewMode = 'main' | 'food-selection' | 'ai-photo';
+type ViewMode = 'main' | 'food-selection' | 'ai-photo' | 'barcode-search';
 
 export function MealLogPage({
   selectedFood,
@@ -252,10 +253,30 @@ export function MealLogPage({
     return (
       <FoodSelectionPage
         onBack={() => setViewMode('main')}
-        onNavigateToBarcode={onNavigateToBarcode}
+        onNavigateToBarcode={() => setViewMode('barcode-search')}
         onNavigateToAiPhoto={() => setViewMode('ai-photo')}
         onSelectFood={handleSelectRecentFood}
         mealType={selectedMealType}
+      />
+    );
+  }
+
+  // Show barcode search page
+  if (viewMode === 'barcode-search') {
+    return (
+      <BarcodeSearchPage
+        onClose={() => setViewMode('food-selection')}
+        onSelectFood={(food) => {
+          // Convert food to the expected format and add to meal
+          const recentFood = {
+            id: food.id,
+            name: food.name,
+            calories: food.calories,
+            serving: `${food.servingSize || '1'} ${food.servingUnit || '食分'}`,
+            brand: food.brand,
+          };
+          handleSelectRecentFood(recentFood);
+        }}
       />
     );
   }

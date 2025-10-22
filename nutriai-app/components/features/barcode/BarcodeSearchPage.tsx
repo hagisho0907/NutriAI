@@ -40,7 +40,7 @@ export function BarcodeSearchPage({ onClose, onSelectFood }: BarcodeSearchPagePr
       (food) =>
         food.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         food.brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (food as any).janCode?.includes(searchQuery) ||
+        food.janCode?.includes(searchQuery) ||
         food.category?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -82,7 +82,7 @@ export function BarcodeSearchPage({ onClose, onSelectFood }: BarcodeSearchPagePr
   return (
     <div className="h-full flex flex-col bg-primary/5">
       {/* Header */}
-      <div className="bg-[#42B883] text-white p-4 flex items-center gap-3">
+      <div className="bg-primary text-white p-4 flex items-center gap-3">
         {onClose && (
           <button onClick={onClose} className="p-2 -ml-2 hover:bg-white/10 rounded-lg transition-colors">
             <ArrowLeft className="h-5 w-5" />
@@ -108,7 +108,7 @@ export function BarcodeSearchPage({ onClose, onSelectFood }: BarcodeSearchPagePr
               className="pl-9"
             />
           </div>
-          <Button onClick={handleSearch} className="bg-[#42B883] hover:bg-[#2F855A]">
+          <Button onClick={handleSearch} className="bg-primary hover:bg-[#2F855A]">
             検索
           </Button>
         </div>
@@ -160,7 +160,7 @@ export function BarcodeSearchPage({ onClose, onSelectFood }: BarcodeSearchPagePr
                     <Button
                       size="sm"
                       onClick={() => handleAddFood(food)}
-                      className="bg-[#42B883] hover:bg-[#2F855A] shrink-0"
+                      className="bg-primary hover:bg-[#2F855A] shrink-0"
                     >
                       追加
                     </Button>
@@ -170,19 +170,19 @@ export function BarcodeSearchPage({ onClose, onSelectFood }: BarcodeSearchPagePr
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div className="bg-gray-50 p-2 rounded">
                       <p className="text-xs text-gray-500">カロリー</p>
-                      <p className="font-medium">{(food as any).calories} kcal</p>
+                      <p className="font-medium">{food.calories} kcal</p>
                     </div>
                     <div className="bg-gray-50 p-2 rounded">
                       <p className="text-xs text-gray-500">たんぱく質</p>
-                      <p className="font-medium">{(food as any).proteinG} g</p>
+                      <p className="font-medium">{food.proteinG} g</p>
                     </div>
                     <div className="bg-gray-50 p-2 rounded">
                       <p className="text-xs text-gray-500">脂質</p>
-                      <p className="font-medium">{(food as any).fatG} g</p>
+                      <p className="font-medium">{food.fatG} g</p>
                     </div>
                     <div className="bg-gray-50 p-2 rounded">
                       <p className="text-xs text-gray-500">炭水化物</p>
-                      <p className="font-medium">{(food as any).carbG} g</p>
+                      <p className="font-medium">{food.carbG} g</p>
                     </div>
                   </div>
                   {food.servingSize && (
@@ -320,7 +320,7 @@ export function BarcodeSearchPage({ onClose, onSelectFood }: BarcodeSearchPagePr
                 !manualFormData.fatG ||
                 !manualFormData.carbG
               }
-              className="bg-[#42B883] hover:bg-[#2F855A]"
+              className="bg-primary hover:bg-[#2F855A]"
             >
               送信
             </Button>
