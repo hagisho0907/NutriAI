@@ -143,13 +143,13 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                 {formatDate(selectedDate)}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start" side="bottom" sideOffset={8}>
+            <PopoverContent className="w-auto p-0 max-w-[calc(100vw-2rem)]" align="start" side="bottom" sideOffset={8}>
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={(date) => date && setSelectedDate(date)}
                 initialFocus
-                className="rounded-md border"
+                className="rounded-md border max-w-full"
               />
             </PopoverContent>
           </Popover>

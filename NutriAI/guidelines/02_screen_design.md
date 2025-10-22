@@ -200,7 +200,7 @@
   - ChevronLeft/ChevronRightアイコンで前後の日付に移動可能
   - 「今日」「昨日」「明日」を自動判定して表示
   - 全画面でカレンダーポップオーバー形式に統一（Popover + Calendar + CalendarIconボタン）
-  - 適切なポジショニング（align="start" side="bottom" sideOffset={8}）でレイアウト崩れを防止
+  - レスポンシブ対応（max-w-[calc(100vw-2rem)]とmax-w-full）とポジショニング（align="start" side="bottom" sideOffset={8}）でレイアウト崩れを防止
 - **カロリー表示** (2025-10-17):
   - 円形プログレス表示（w-36 h-36）
   - カロリー計算式を「残り = 目標摂取 - 食事摂取」に変更
@@ -255,7 +255,7 @@
   - ChevronLeft/ChevronRightアイコンで前後の日付に移動可能
   - カレンダーポップオーバー形式で日付選択（Calendar + CalendarIconボタン）
   - 「今日」「昨日」を自動判定して表示
-  - 適切なポジショニング（align="start" side="bottom" sideOffset={8}）でレイアウト崩れを防止
+  - レスポンシブ対応（max-w-[calc(100vw-2rem)]とmax-w-full）とポジショニング（align="start" side="bottom" sideOffset={8}）でレイアウト崩れを防止
 - **日次サマリー** (2025-10-17):
   - カロリー、タンパク質、脂質、炭水化物の合計を表示
 - **食事種別セクション** (2025-10-17):
