@@ -323,7 +323,7 @@ export function MealLogPage({
                   <DialogTitle>日付を選択</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 p-4">
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-3">
                     <Select
                       value={selectedDate.getFullYear().toString()}
                       onValueChange={(year) => {
@@ -332,7 +332,7 @@ export function MealLogPage({
                         setSelectedDate(newDate);
                       }}
                     >
-                      <SelectTrigger className="w-20">
+                      <SelectTrigger className="w-24">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -355,7 +355,7 @@ export function MealLogPage({
                         setSelectedDate(newDate);
                       }}
                     >
-                      <SelectTrigger className="w-16">
+                      <SelectTrigger className="w-20">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -375,7 +375,7 @@ export function MealLogPage({
                         setSelectedDate(newDate);
                       }}
                     >
-                      <SelectTrigger className="w-16">
+                      <SelectTrigger className="w-20">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
