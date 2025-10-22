@@ -5,15 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
-import { Avatar, AvatarFallback } from '../../ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Settings, ChevronLeft, ChevronRight, Utensils, Scale, CheckCircle2, Circle, Calendar as CalendarIcon } from 'lucide-react';
-import { mockDailySummary, mockUser, mockBodyMetrics } from '../../../lib/mockData';
+import { mockDailySummary, mockBodyMetrics } from '../../../lib/mockData';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '../../ui/carousel';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../ui/collapsible';
 import { toast } from 'sonner';
 import { ProfileSettingsPage } from '../profile/ProfileSettingsPage';
+import { formatDate } from '../../../lib/utils/dateUtils';
 
 // Apple Icon SVG Component
 function AppleIcon() {
@@ -84,23 +84,6 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
     setSelectedDate(newDate);
   };
 
-  const formatDate = (date: Date) => {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return '今日';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return '昨日';
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      return '明日';
-    } else {
-      return date.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' });
-    }
-  };
 
   if (showProfileSettings) {
     return <ProfileSettingsPage onBack={() => setShowProfileSettings(false)} />;

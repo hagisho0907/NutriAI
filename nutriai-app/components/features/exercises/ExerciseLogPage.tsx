@@ -23,8 +23,6 @@ import {
 } from '../../ui/dialog';
 import {
   Activity,
-  Dumbbell,
-  Heart,
   Plus,
   ChevronLeft,
   ChevronRight,
@@ -35,6 +33,7 @@ import {
 import { mockExercises, mockExerciseTemplates } from '../../../lib/mockData';
 import type { ExerciseLog } from '../../../types/exercise';
 import { toast } from 'sonner';
+import { formatDate } from '../../../lib/utils/dateUtils';
 
 export function ExerciseLogPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -124,23 +123,6 @@ export function ExerciseLogPage() {
     toast.success('削除しました');
   };
 
-  const formatDate = (date: Date) => {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return '今日';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return '昨日';
-    } else {
-      return date.toLocaleDateString('ja-JP', {
-        month: 'long',
-        day: 'numeric',
-        weekday: 'short',
-      });
-    }
-  };
 
   const intensityLabels = {
     low: '低強度',
@@ -148,16 +130,6 @@ export function ExerciseLogPage() {
     high: '高強度',
   };
 
-  const getIconForCategory = (category: string) => {
-    switch (category) {
-      case 'cardio':
-        return <Activity className="w-5 h-5 text-primary" />;
-      case 'strength':
-        return <Dumbbell className="w-5 h-5 text-primary" />;
-      default:
-        return <Heart className="w-5 h-5 text-primary" />;
-    }
-  };
 
   return (
     <div className="pb-20 bg-primary/5 min-h-full">

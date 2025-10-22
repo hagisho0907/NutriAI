@@ -12,25 +12,22 @@ import {
   Calendar as CalendarIcon,
   Trash2,
 } from 'lucide-react';
-import type { Food, MealItem } from '../../../types/food';
+import type { MealItem } from '../../../types/food';
 import type { Meal } from '../../../types/meal';
 import { toast } from 'sonner';
 import { FoodSelectionPage } from './FoodSelectionPage';
 import { AiPhotoEstimatePage } from './AiPhotoEstimatePage';
 import { BarcodeSearchPage } from '../barcode/BarcodeSearchPage';
+import { formatDate } from '../../../lib/utils/dateUtils';
 
 interface MealLogPageProps {
-  selectedFood?: Food | null;
   onNavigateToBarcode?: () => void;
-  onClearSelectedFood?: () => void;
 }
 
 type ViewMode = 'main' | 'food-selection' | 'ai-photo' | 'barcode-search';
 
 export function MealLogPage({
-  selectedFood,
   onNavigateToBarcode,
-  onClearSelectedFood,
 }: MealLogPageProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [meals, setMeals] = useState<Meal[]>([]);
@@ -230,23 +227,6 @@ export function MealLogPage({
     snack: '間食',
   };
 
-  const formatDate = (date: Date) => {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return '今日';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return '昨日';
-    } else {
-      return date.toLocaleDateString('ja-JP', {
-        month: 'long',
-        day: 'numeric',
-        weekday: 'short',
-      });
-    }
-  };
 
   // Show food selection page
   if (viewMode === 'food-selection') {
