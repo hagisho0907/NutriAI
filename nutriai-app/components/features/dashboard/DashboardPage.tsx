@@ -13,6 +13,7 @@ import { mockDailySummary, mockUser, mockBodyMetrics } from '../../../lib/mockDa
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '../../ui/carousel';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../ui/collapsible';
 import { toast } from 'sonner';
+import { ProfileSettingsPage } from '../profile/ProfileSettingsPage';
 
 // Apple Icon SVG Component
 function AppleIcon() {
@@ -47,6 +48,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
   const [isWeightInputOpen, setIsWeightInputOpen] = useState(false);
   const [weightInput, setWeightInput] = useState('');
   const [, setUpdateTrigger] = useState(0);
+  const [showProfileSettings, setShowProfileSettings] = useState(false);
   
   const summary = mockDailySummary;
   const latestWeight = mockBodyMetrics[mockBodyMetrics.length - 1];
@@ -100,16 +102,25 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
     }
   };
 
+  if (showProfileSettings) {
+    return <ProfileSettingsPage onBack={() => setShowProfileSettings(false)} />;
+  }
+
   return (
     <div className="pb-20 bg-primary/5 min-h-screen">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-50">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <Avatar className="w-10 h-10">
-            <AvatarFallback className="bg-primary text-white">
-              {(mockUser as any).displayName?.charAt(0) || 'U'}
-            </AvatarFallback>
-          </Avatar>
+          <button
+            onClick={() => setShowProfileSettings(true)}
+            className="w-10 h-10 rounded-full hover:ring-2 hover:ring-primary/20 transition-all"
+          >
+            <Avatar className="w-10 h-10">
+              <AvatarFallback className="bg-primary text-white">
+                {(mockUser as any).displayName?.charAt(0) || 'U'}
+              </AvatarFallback>
+            </Avatar>
+          </button>
           
           <div className="flex items-center gap-2">
             <AppleIcon />
