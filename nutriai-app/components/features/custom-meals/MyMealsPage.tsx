@@ -60,7 +60,7 @@ export function MyMealsPage() {
   }
 
   return (
-    <div className="pb-20 bg-gray-50 min-h-screen">
+    <div className="pb-20 bg-primary/5 min-h-screen">
       {/* Header */}
       <div className="bg-white border-b border-border px-4 py-4 sticky top-0 z-50">
         <div className="max-w-2xl mx-auto">
@@ -129,7 +129,7 @@ export function MyMealsPage() {
           <>
             <div className="grid grid-cols-2 gap-3">
               <Card
-                className="cursor-pointer hover:bg-gray-50 transition-colors border-gray-200"
+                className="cursor-pointer hover:bg-primary/5 transition-colors border-gray-200"
                 onClick={handleCreateNew}
               >
                 <CardContent className="pt-8 pb-8 flex flex-col items-center gap-3">
@@ -140,7 +140,7 @@ export function MyMealsPage() {
                 </CardContent>
               </Card>
 
-              <Card className="cursor-pointer hover:bg-gray-50 transition-colors border-gray-200">
+              <Card className="cursor-pointer hover:bg-primary/5 transition-colors border-gray-200">
                 <CardContent className="pt-8 pb-8 flex flex-col items-center gap-3">
                   <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center">
                     <Copy className="w-8 h-8 text-primary" />
@@ -165,7 +165,7 @@ export function MyMealsPage() {
                   {filteredMeals.map((meal) => (
                     <Card
                       key={meal.id}
-                      className="cursor-pointer hover:bg-gray-50 transition-colors border-gray-200"
+                      className="cursor-pointer hover:bg-primary/5 transition-colors border-gray-200"
                       onClick={() => handleEditMeal(meal)}
                     >
                       <CardContent className="py-3">

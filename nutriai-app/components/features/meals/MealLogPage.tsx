@@ -273,7 +273,7 @@ export function MealLogPage({
 
   // Main meal log view
   return (
-    <div className="pb-20 bg-secondary min-h-full">
+    <div className="pb-20 bg-primary/5 min-h-full">
       {/* Header */}
       <div className="bg-white border-b border-border px-4 py-4 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto">
@@ -379,7 +379,7 @@ export function MealLogPage({
                   {meal.items.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-start justify-between p-3 bg-secondary rounded-lg"
+                      className="flex items-start justify-between p-3 bg-primary/5 rounded-lg"
                     >
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{item.foodName}</p>

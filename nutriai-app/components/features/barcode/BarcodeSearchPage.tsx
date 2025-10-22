@@ -80,7 +80,7 @@ export function BarcodeSearchPage({ onClose, onSelectFood }: BarcodeSearchPagePr
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#F5FBF6]">
+    <div className="h-full flex flex-col bg-primary/5">
       {/* Header */}
       <div className="bg-[#42B883] text-white p-4 flex items-center gap-3">
         {onClose && (

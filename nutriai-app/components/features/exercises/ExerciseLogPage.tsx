@@ -161,7 +161,7 @@ export function ExerciseLogPage() {
   };
 
   return (
-    <div className="pb-20 bg-secondary min-h-full">
+    <div className="pb-20 bg-primary/5 min-h-full">
       {/* Header */}
       <div className="bg-white border-b border-border px-4 py-4 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto">
@@ -252,7 +252,7 @@ export function ExerciseLogPage() {
               dayExercises.map((exercise) => (
                 <div
                   key={exercise.id}
-                  className="flex items-start justify-between p-3 bg-secondary rounded-lg"
+                  className="flex items-start justify-between p-3 bg-primary/5 rounded-lg"
                 >
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">

@@ -87,7 +87,7 @@ export function MyFoodsPage() {
   };
 
   return (
-    <div className="pb-20 bg-secondary min-h-screen">
+    <div className="pb-20 bg-primary/5 min-h-screen">
       {/* Header */}
       <div className="bg-white border-b border-border px-4 py-4 sticky top-0 z-50">
         <div className="max-w-2xl mx-auto">

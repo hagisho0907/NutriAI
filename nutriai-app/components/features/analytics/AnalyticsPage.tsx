@@ -29,7 +29,7 @@ export function AnalyticsPage() {
   const [bodyFatInput, setBodyFatInput] = useState('');
 
   return (
-    <div className="pb-20 bg-secondary min-h-full">
+    <div className="pb-20 bg-primary/5 min-h-full">
       {/* Header */}
       <div className="bg-white border-b border-border px-4 py-4 sticky top-0 z-50">
         <div className="max-w-2xl mx-auto">
@@ -398,7 +398,7 @@ export function AnalyticsPage() {
                 const date = new Date(metric.date);
                 const dateStr = date.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' });
                 return (
-                  <div key={idx} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
+                  <div key={idx} className="flex items-center justify-between p-3 bg-primary/5 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="text-sm">
                         <p className="font-medium">{dateStr}</p>
