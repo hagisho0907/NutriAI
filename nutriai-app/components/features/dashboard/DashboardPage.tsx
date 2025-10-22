@@ -153,6 +153,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                   selected={selectedDate}
                   onSelect={(date) => date && setSelectedDate(date)}
                   initialFocus
+                  weekStartsOn={1}
                   className="rounded-md border scale-90"
                 />
               </div>
