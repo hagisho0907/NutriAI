@@ -32,7 +32,7 @@
 | Exercises | POST | /exercises/logs | 運動記録 | |
 | Analytics | GET | /analytics/progress | 月次集計 | |
 | AI | POST | /ai/goals/proposal | 目標提案 | モックはプリセット |
-| AI | POST | /ai/meals/estimate | 食事マクロ推定 | 画像URLと補足を受け取る |
+| AI | POST | /ai/meals/estimate | 食事マクロ推定(Proxy to Google Gemini) | 画像URLと補足を受け取る |
 | AI | POST | /ai/chat | チャット | モックはテンプレ回答 |
 | System | GET | /status | ヘルスチェック | 200/503 スタブ |
 
@@ -146,7 +146,85 @@
 ```
 - モック実装: `items`が空の時はAI推定スタブを呼んで自動生成する。
 
-### 4.4 POST /ai/chat
+### 4.4 POST /ai/meals/estimate
+- 認証: 必須。
+- 動作概要: BFFが受け取った画像をBase64エンコードし、補足テキストとともにGemini 2.5 Flash-Liteへ送信して食品候補・栄養情報を取得する。
+- リクエスト:
+```json
+{
+  "image_base64": "data:image/jpeg;base64,...",
+  "description": "鶏胸肉のグリル、玄米150g、味噌汁",
+  "meal_type": "lunch",
+  "user_id": "auth-user-123"
+}
+```
+- Gemini連携:
+  - エンドポイント: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-02-05:generateContent`
+  - 必須ヘッダー: `Content-Type: application/json`
+  - クエリ/パラメータ: `key=<GOOGLE_AI_API_KEY>`
+  - ペイロード例:
+```json
+{
+  "contents": [
+    {
+      "role": "user",
+      "parts": [
+        {"text": "You are a nutrition assistant... 出力フォーマットをJSONで指示"},
+        {
+          "inline_data": {
+            "mime_type": "image/jpeg",
+            "data": "<BASE64_IMAGE>"
+          }
+        },
+        {"text": "User context: 鶏胸肉のグリル 玄米150g 味噌汁"}
+      ]
+    }
+  ],
+  "generationConfig": {
+    "temperature": 0.2,
+    "maxOutputTokens": 512,
+    "responseMimeType": "application/json"
+  }
+}
+```
+- レスポンス(200):
+```json
+{
+  "provider": "gemini",
+  "fallback": false,
+  "items": [
+    {
+      "name": "Grilled Chicken Breast",
+      "quantity": 150,
+      "unit": "g",
+      "calories": 240,
+      "protein_g": 36,
+      "fat_g": 4,
+      "carb_g": 0,
+      "confidence": 0.87
+    }
+  ],
+  "totals": {
+        "calories": 520,
+        "protein_g": 42,
+        "fat_g": 14,
+        "carb_g": 48
+  },
+  "meta": {
+    "request_id": "cm-req-20251028-001",
+    "fallback": false
+  }
+}
+```
+- エラー:
+  - 400: 画像欠如/フォーマット不正
+  - 401: APIキー未設定・無効
+  - 429: Geminiレート超過 → `fallback: true` を付けたモック結果を返す
+  - 500/503: Gemini側障害
+- モック実装: Gemini未接続時はランダム食品サンプルを返却し、`provider: "mock"`、`fallback: true` を明示
+- ログ/監査: `ai_inferences` テーブルにリクエストID、ユーザーID、推定結果、レスポンス時間、Gemini API推定トークン量を記録する
+
+### 4.5 POST /ai/chat
 - 認証: 必須(モックではスキップ)。
 - リクエスト:
 ```json

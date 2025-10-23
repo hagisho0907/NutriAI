@@ -66,7 +66,17 @@ export function useImageUpload({
         imageUrl: uploadResult.publicUrl
       };
 
-      toast.success(`AI分析が完了しました (${analysisResult.items.length}個の食品を検出)`);
+      const providerLabel = analysisResult.provider === 'gemini' ? 'Gemini' : 'モックAI';
+
+      if (analysisResult.fallback) {
+        toast.warning('AI推定は参考値です', {
+          description: `${providerLabel}が利用できなかったためモック結果を表示しています`
+        });
+      } else {
+        toast.success(`AI分析が完了しました (${analysisResult.items.length}個の食品を検出)`, {
+          description: `${providerLabel}の推定結果です`
+        });
+      }
 
       if (onAnalysisComplete) {
         onAnalysisComplete(resultWithUrl);

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
 import { Label } from '../../ui/label';
 import { Textarea } from '../../ui/textarea';
@@ -56,8 +57,7 @@ export function AiPhotoEstimatePage({
   const handleEstimate = async () => {
     console.log('🤖 AI推定ボタンがクリックされました');
     console.log('📷 選択された画像:', selectedImage);
-    console.log('🔑 APIキー設定:', process.env.NEXT_PUBLIC_REPLICATE_API_KEY ? '設定済み' : '未設定');
-    console.log('🚀 リアルAI:', process.env.NEXT_PUBLIC_ENABLE_REAL_AI_ANALYSIS);
+    console.log('🔑 Geminiフラグ:', process.env.NEXT_PUBLIC_ENABLE_GEMINI);
     
     if (!selectedImage) {
       console.log('❌ 画像が選択されていません');
@@ -77,36 +77,33 @@ export function AiPhotoEstimatePage({
         carb: result.totalCarbs
       });
       setShowEstimation(true);
-      
-      if (result.overallConfidence < 0.5) {
-        toast.warning('推定精度が低いです', {
+
+      const providerLabel = result.provider === 'gemini' ? 'Gemini' : 'モックAI';
+
+      if (result.fallback) {
+        toast.warning('AI推定は参考値です', {
+          description: `${providerLabel}が利用できなかったためモック結果を表示しています`
+        });
+      } else if (result.overallConfidence < 0.5) {
+        toast.warning(`推定精度が低いです (${providerLabel})`, {
           description: '料理の詳細を記載すると精度が向上します'
         });
       } else {
-        toast.success('AI推定が完了しました', {
+        toast.success(`AI推定が完了しました (${providerLabel})`, {
           description: `信頼度: ${Math.round(result.overallConfidence * 100)}%`
         });
       }
     } catch (error) {
       console.error('Vision analysis error:', error);
-      
-      if (error instanceof Error) {
-        if (error.message.includes('API')) {
-          toast.error('AI推定サービスが利用できません', {
-            description: 'しばらく時間をおいて再度お試しください'
-          });
-        } else if (error.message.includes('timeout')) {
-          toast.error('推定がタイムアウトしました', {
-            description: '画像サイズを小さくしてお試しください'
-          });
-        } else {
-          toast.error('AI推定に失敗しました', {
-            description: '手動で栄養素を入力することも可能です'
-          });
-        }
-      } else {
-        toast.error('予期しないエラーが発生しました');
-      }
+
+      const friendlyMessage =
+        error instanceof Error
+          ? error.message
+          : '手動で栄養素を入力することも可能です';
+
+      toast.error('AI推定に失敗しました', {
+        description: friendlyMessage
+      });
     } finally {
       setIsEstimating(false);
     }
@@ -214,12 +211,29 @@ export function AiPhotoEstimatePage({
         {showEstimation && (
           <Card className="border-primary/50 bg-gradient-to-br from-primary/5 to-accent/5">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" />
-                AI推定結果
-              </CardTitle>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  AI推定結果
+                </CardTitle>
+                {analysisResult && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant={analysisResult.fallback ? 'destructive' : 'secondary'}>
+                      {analysisResult.fallback ? '参考値 (モック)' : 'Gemini'}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      信頼度 {Math.round(analysisResult.overallConfidence * 100)}%
+                    </span>
+                  </div>
+                )}
+              </div>
               <p className="text-sm text-muted-foreground">
-                推定カロリー: {Math.round(totalCalories)} kcal (信頼度: {analysisResult ? Math.round(analysisResult.overallConfidence * 100) : 82}%)
+                推定カロリー: {Math.round(totalCalories)} kcal
+                {analysisResult && (
+                  <span className="ml-1">
+                    ／ 推定元: {analysisResult.provider === 'gemini' ? 'Gemini' : 'モックAI'}
+                  </span>
+                )}
               </p>
             </CardHeader>
             <CardContent className="space-y-6">

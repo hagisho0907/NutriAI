@@ -37,7 +37,17 @@ export class ClientVisionService implements VisionService {
       throw new Error(result.details || result.error || 'Analysis failed');
     }
 
-    return result.data;
+    if (result.meta) {
+      console.info('ℹ️ Vision meta情報:', result.meta);
+    }
+
+    const analysis: VisionAnalysisResult = {
+      ...result.data,
+      provider: result.data.provider ?? result.meta?.provider ?? 'gemini',
+      fallback: result.data.fallback ?? Boolean(result.meta?.fallback),
+    };
+
+    return analysis;
   }
 }
 

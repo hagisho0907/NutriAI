@@ -317,6 +317,7 @@ Vision推定・LLMチャット・AIレビューなどAI体験全体を設計し�
 - UX観点でのAI機能仕様書作成（フロー、フォールバック、エラー挙動）。
 - 評価データセットの整備と自動評価（offline eval／A/Bテスト）の設計。
 - AI関連の安全性・コンプライアンス要件（情報開示、検閲）の整理。
+- 外部AIベンダー（Google Gemini等）の契約・利用量モニタリングとコスト最適化。
 
 ### 成果物
 - **AI Prompt Spec**：`reports/ai/YYYYMMDD_<feature>.md`。目的、プロンプト構造、例示、トーン指針。
@@ -369,6 +370,7 @@ Vision推定・LLMチャット・AIレビューなどAI体験全体を設計し�
 - Prompt管理: Git + YAML/JSON、Glow (prompt registry)。
 - 評価: LangSmith, Promptfoo, custom Jupyter notebook。
 - モニタリング: OpenAI telemetry, Datadog dashboards, user feedbackフォーム。
+- ベンダードキュメント: Google AI Studio / Gemini API Docs、料金ダッシュボード。
 
 ### ガードレール
 - 機密情報・PIIはプロンプトに含めない。必ずマスキングを実施。

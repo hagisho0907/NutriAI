@@ -1,3 +1,8 @@
+const parseIntOrDefault = (value: string | undefined, defaultValue: number): number => {
+  const parsed = value ? parseInt(value, 10) : NaN;
+  return Number.isFinite(parsed) ? parsed : defaultValue;
+};
+
 export const env = {
   // Supabase
   supabase: {
@@ -8,7 +13,11 @@ export const env = {
 
   // AI APIs
   ai: {
-    replicateToken: process.env.REPLICATE_API_TOKEN || '',
+    geminiApiKey: process.env.GOOGLE_AI_API_KEY || '',
+    geminiModel: process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite-preview-02-05',
+    geminiTemperature: parseFloat(process.env.GEMINI_TEMPERATURE || '0.2'),
+    geminiMaxOutputTokens: parseIntOrDefault(process.env.GEMINI_MAX_OUTPUT_TOKENS, 512),
+    geminiTimeoutMs: parseIntOrDefault(process.env.GEMINI_TIMEOUT_MS, 20000),
     openaiKey: process.env.OPENAI_API_KEY || '',
     anthropicKey: process.env.ANTHROPIC_API_KEY || '',
   },
@@ -23,6 +32,7 @@ export const env = {
 
   // Feature Flags
   features: {
+    geminiVision: process.env.NEXT_PUBLIC_ENABLE_GEMINI === 'true',
     realAiAnalysis: process.env.ENABLE_REAL_AI_ANALYSIS === 'true',
     supabaseStorage: process.env.ENABLE_SUPABASE_STORAGE === 'true',
     imageUpload: process.env.ENABLE_IMAGE_UPLOAD === 'true',
@@ -44,8 +54,8 @@ export const env = {
 export function validateEnv() {
   const missing: string[] = [];
 
-  if (env.features.realAiAnalysis && !env.ai.replicateToken) {
-    missing.push('REPLICATE_API_TOKEN');
+  if ((env.features.geminiVision || env.features.realAiAnalysis) && !env.ai.geminiApiKey) {
+    missing.push('GOOGLE_AI_API_KEY');
   }
 
   if (env.features.supabaseStorage) {

@@ -89,6 +89,12 @@ export function getErrorMessage(error: AppError): string {
     case 'VALIDATION_ERROR':
       return error.message;
     case 'API_ERROR':
+      if (error.statusCode === 401) {
+        return 'AI推定サービスの認証に失敗しました。管理者に連絡してください。';
+      }
+      if (error.statusCode === 402) {
+        return 'AI推定サービスのクレジットが不足しています。管理者に連絡してください。';
+      }
       if (error.statusCode === 429) {
         return 'リクエストが多すぎます。しばらくお待ちください';
       }

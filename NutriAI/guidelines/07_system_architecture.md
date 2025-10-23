@@ -44,7 +44,7 @@ flowchart TD
 - **BFF/Edge Functions**: Supabase Edge Functions(Deno)でBFFロジックを提供し、LLM・画像推定など外部APIへの接続を集約。環境変数とFeature FlagをSupabase側で管理。
 - **DB**: Supabase Postgres(マネージドPostgreSQL)。RLSでユーザー毎アクセス制御を実施し、スキーマは`supabase/db`配下でマイグレーション管理。
 - **オブジェクトストレージ**: Supabase Storage。食事写真を署名付きURL経由でアップロードし、一定期間後にクリーンアップを実施。
-- **LLM/Vision**: OpenAI GPT-4o miniまたはAnthropic Claude Haikuを主モデルとして利用。画像推定はReplicateの食品推定モデルまたはGoogle Cloud Vision APIを従量課金で呼び出す。
+- **LLM/Vision**: LLMはOpenAI GPT-4o miniとAnthropic Claude Haikuを用途別に使い分ける。画像推定はGoogle Gemini 2.5 Flash-Liteを第一候補とし、フォールバックとしてモック推定を保持。Geminiからの構造化レスポンスを解析して栄養データ補完ロジックに接続する。
 - **監視**: フロントはVercel Analytics + Sentry、Supabaseはログ・pg_stat_statementsで監視。必要に応じてLogflare/Datadog連携を検討。
 
 ## 5. セキュリティ・運用
@@ -61,5 +61,6 @@ flowchart TD
 
 ## 7. LLM・画像推定サービス方針
 - **LLM選定**: コストとレスポンス品質のバランスから、相談チャットや目標提案はOpenAI GPT-4o miniを基本とし、長文回答や日本語の自然さを優先するケースではAnthropic Claude Haikuを併用する。Edge Functionから直接呼び出し、応答内容は`ai_inferences`に保存。
-- **画像推定**: 食事写真のマクロ推定は従量課金型の外部サービスを活用する。初期はReplicate(食品推定モデル)またはGoogle Cloud Visionのラベル検出を組み合わせ、必要に応じて栄養データを補完。Nanobananaは高精度だがコストが高いため、ユーザー数が増えるまでは採用を見送り。
+- **画像推定**: 食事写真のマクロ推定はGemini 2.5 Flash-Liteに画像＋補足文を同時投入して実施する。Geminiの生成結果はJSON形式（食品候補、栄養推定、信頼度）で返させ、NutriAI側で食材辞書・過去データと突合して補正処理を行う。Gemini障害時やレート超過時はモック推定(フロント/サーバ共通ロジック)にフェイルオーバーし、ユーザーには fallback モードを表示する。将来的には別モデル（LogMeal等）への切り替えもFeature Flagで制御可能にする。
+- **コスト管理**: Geminiはトークン課金のため、Edge Function/BFFでユーザーごとの日次・月次クォータを監視し、呼び出し回数・レスポンスサイズをSupabaseに記録。利用上限を超える前に警告通知とモック切り替えを行う。料金状況はGoogle CloudのBilling APIとダッシュボードでモニタリング。
 - **コスト管理**: LLM/画像APIの呼び出し回数をログ化し、ユーザー当たりのクォータ制御をEdge Functionで実装。定期的にAPI利用料金を監視し、閾値超過前にプラン変更やモデル切り替えを判断する。
