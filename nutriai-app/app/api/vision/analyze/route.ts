@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     console.log('🏭 VisionService作成中...');
     console.log('🔑 環境変数チェック:', {
       ENABLE_REAL_AI: process.env.NEXT_PUBLIC_ENABLE_REAL_AI_ANALYSIS,
-      HAS_API_KEY: !!process.env.NEXT_PUBLIC_REPLICATE_API_KEY,
+      HAS_API_KEY: !!process.env.REPLICATE_API_KEY, // サーバーサイド環境変数
       NODE_ENV: process.env.NODE_ENV
     });
     

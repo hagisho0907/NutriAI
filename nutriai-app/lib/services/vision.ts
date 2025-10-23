@@ -322,23 +322,28 @@ Format your response as a JSON array of food items.`;
 
 // Factory function to get appropriate service
 export function createVisionService(): VisionService {
-  // Check environment configuration
-  const useRealAPI = process.env.NEXT_PUBLIC_ENABLE_REAL_AI_ANALYSIS === 'true';
-  const apiKey = process.env.NEXT_PUBLIC_REPLICATE_API_KEY;
+  // Check if running on server-side
+  const isServer = typeof window === 'undefined';
   
-  console.log('🏭 VisionService作成:', {
-    useRealAPI,
-    hasAPIKey: !!apiKey,
-    apiKeyLength: apiKey?.length || 0,
-    env: process.env.NODE_ENV
-  });
-  
-  if (useRealAPI && apiKey) {
-    console.log('✅ ReplicateVisionService を使用');
-    return new ReplicateVisionService(apiKey);
+  // Only use real API on server-side with proper API key
+  if (isServer) {
+    const useRealAPI = process.env.NEXT_PUBLIC_ENABLE_REAL_AI_ANALYSIS === 'true';
+    const apiKey = process.env.REPLICATE_API_KEY; // Note: No NEXT_PUBLIC_ prefix
+    
+    console.log('🏭 VisionService作成 (サーバーサイド):', {
+      useRealAPI,
+      hasAPIKey: !!apiKey,
+      apiKeyLength: apiKey?.length || 0,
+      env: process.env.NODE_ENV
+    });
+    
+    if (useRealAPI && apiKey) {
+      console.log('✅ ReplicateVisionService を使用');
+      return new ReplicateVisionService(apiKey);
+    }
   }
   
-  // Default to mock service for development
+  // Default to mock service for client-side or when API key not available
   console.log('🎭 MockVisionService を使用');
   return new MockVisionService();
 }
