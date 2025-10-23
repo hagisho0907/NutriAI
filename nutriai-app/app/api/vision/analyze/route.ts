@@ -102,6 +102,8 @@ export async function POST(request: NextRequest) {
     let clientMessage = appError.message;
     if (appError.statusCode === 401) {
       clientMessage = 'Gemini APIキーが無効か設定されていません。管理者に連絡してください。';
+    } else if (appError.statusCode === 404) {
+      clientMessage = '指定されたGeminiモデルが見つかりません。モデル名を確認して再度お試しください。';
     } else if (appError.statusCode === 429) {
       clientMessage = 'Gemini APIの利用上限に達しました。時間をおいて再試行するか手動入力をご利用ください。';
     } else if (appError.statusCode === 503 || appError.statusCode === 504) {
@@ -120,7 +122,7 @@ export async function POST(request: NextRequest) {
     const canFallback =
       processedImage !== null &&
       appError.code === 'API_ERROR' &&
-      [401, 429, 503, 504].includes(appError.statusCode);
+      [401, 404, 429, 503, 504].includes(appError.statusCode);
 
     if (canFallback) {
       const fallbackImage = processedImage!;
