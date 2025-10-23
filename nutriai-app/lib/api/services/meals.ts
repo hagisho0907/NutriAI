@@ -6,7 +6,7 @@ import type {
   MealItem,
   MealAnalysis,
   MealStatistics,
-} from '../../../types'
+} from '../../../types/meal'
 import type { PaginatedResponse } from '../../../types/api'
 
 export interface MealLogParams {

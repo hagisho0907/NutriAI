@@ -8,7 +8,7 @@ import type {
   FoodComparison,
   FoodUsageStats,
   BatchBarcodeSearchResult,
-} from '../../../types'
+} from '../../../types/food'
 import type { PaginatedResponse } from '../../../types/api'
 
 export interface FoodSearchParams {

@@ -9,7 +9,7 @@ import type {
   ChatSearchResult,
   ChatTemplate,
   ConversationContext,
-} from '../../../types'
+} from '../../../types/chat'
 import type { PaginatedResponse } from '../../../types/api'
 
 export interface ChatMessagesParams {

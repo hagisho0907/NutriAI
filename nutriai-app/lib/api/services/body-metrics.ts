@@ -1,6 +1,6 @@
 // Body Metrics API service
 import { apiClient } from '../client'
-import type { BodyMetrics } from '../../../types'
+import type { BodyMetrics } from '../../../types/body-metrics'
 import type { PaginatedResponse } from '../../../types/api'
 
 export interface BodyMetricsParams {

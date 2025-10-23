@@ -5,7 +5,7 @@ import type {
   ExerciseTemplate,
   ExerciseRecommendation,
   WeeklyExerciseSummary,
-} from '../../../types'
+} from '../../../types/exercise'
 import type { PaginatedResponse } from '../../../types/api'
 
 export interface ExerciseLogParams {

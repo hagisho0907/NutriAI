@@ -1,6 +1,6 @@
 // Nutrition API service
 import { apiClient } from '../client'
-import type { NutritionGoals, DailyNutrition, NutrientBalance, NutritionSummary } from '../../../types'
+import type { NutritionGoals, DailyNutrition, NutrientBalance, NutritionSummary } from '../../../types/nutrition'
 import type { PaginatedResponse } from '../../../types/api'
 
 export const nutritionService = {
