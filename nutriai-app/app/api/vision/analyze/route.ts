@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createStorageService } from '@/lib/services/storage';
-import { createVisionService } from '@/lib/services/vision';
+import { createVisionService, MockVisionService } from '@/lib/services/vision';
+import { classifyError, AppError } from '@/lib/utils/errorHandling';
+import type { ProcessedImage } from '@/lib/utils/imageProcessing';
 
 // Use Node.js runtime for Replicate API calls
 export const runtime = 'nodejs';
@@ -8,10 +10,13 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   console.log('🔍 Vision API: リクエスト受信');
   
+  let processedImage: ProcessedImage | null = null;
+  let description: string | undefined;
+
   try {
     const formData = await request.formData();
     const imageFile = formData.get('image') as File;
-    const description = formData.get('description') as string;
+    description = (formData.get('description') as string) || undefined;
     const userId = formData.get('userId') as string;
     const mealType = formData.get('mealType') as string;
     
@@ -55,7 +60,7 @@ export async function POST(request: NextRequest) {
     const dataUrl = `data:${imageFile.type};base64,${base64}`;
     
     // Create processed image object
-    const processedImage = {
+    processedImage = {
       file: imageFile,
       dataUrl,
       width: 1200,
@@ -80,25 +85,62 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ Vision API エラー:', error);
+    const appError: AppError = classifyError(error);
+    const clientMessage =
+      appError.statusCode === 402
+        ? 'AIビジョン分析のクレジットが不足しています。数分後に再試行するか、管理者に連絡してください。'
+        : appError.message;
+    console.error('❌ Vision API エラー:', appError);
     console.error('エラー詳細:', {
-      name: error instanceof Error ? error.name : 'Unknown',
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
+      name: appError.name,
+      message: appError.message,
+      status: appError.statusCode,
+      code: appError.code,
+      retryable: appError.retryable,
+      stack: appError.stack
     });
+
+    if (
+      processedImage &&
+      appError.code === 'API_ERROR' &&
+      appError.statusCode === 402
+    ) {
+      console.warn('⚠️ Replicate APIのクレジット不足。モック分析にフォールバックします。');
+      
+      try {
+        const fallbackService = new MockVisionService();
+        const fallbackResult = await fallbackService.analyzeFood(processedImage, description);
+        
+        return NextResponse.json(
+          {
+            success: true,
+            data: fallbackResult,
+            meta: {
+              fallback: true,
+              reason: 'replicate_insufficient_credit'
+            }
+          },
+          { status: 200 }
+        );
+      } catch (fallbackError) {
+        console.error('❌ フォールバック分析に失敗:', fallbackError);
+      }
+    }
     
-    // Return more detailed error for debugging
     return NextResponse.json(
       { 
-        error: 'Failed to analyze image',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        // Only in development
+        error: clientMessage,
+        code: appError.code,
+        retryable: appError.retryable,
+        details: appError.message,
         debug: process.env.NODE_ENV === 'development' ? {
-          name: error instanceof Error ? error.name : 'Unknown',
-          message: error instanceof Error ? error.message : String(error)
+          name: appError.name,
+          message: appError.message,
+          status: appError.statusCode,
+          stack: appError.stack
         } : undefined
       },
-      { status: 500 }
+      { status: appError.statusCode || 500 }
     );
   }
 }
