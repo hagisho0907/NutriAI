@@ -227,7 +227,7 @@ export class ReplicateVisionService implements VisionService {
       console.log('🔍 解析結果をパース中:', output);
       
       // BLIP-2 returns natural language, so parse it
-      const items = this.parseNaturalLanguageResponse(output);
+      let items = this.parseNaturalLanguageResponse(output);
       
       // If no items found, create basic estimation
       if (items.length === 0) {
