@@ -20,8 +20,10 @@ export class ClientVisionService implements VisionService {
     }
 
     const result = await response.json();
-    if (!result.success) {
-      throw new Error(result.error || 'Analysis failed');
+    
+    if (!response.ok || !result.success) {
+      console.error('❌ APIエラーレスポンス:', result);
+      throw new Error(result.details || result.error || 'Analysis failed');
     }
 
     return result.data;
