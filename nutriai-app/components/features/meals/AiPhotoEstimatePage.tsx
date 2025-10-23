@@ -8,6 +8,9 @@ import { Textarea } from '../../ui/textarea';
 import { Slider } from '../../ui/slider';
 import { Camera, Upload, Sparkles, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { ImageUpload } from '@/components/features/meal/ImageUpload';
+import { ProcessedImage } from '@/lib/utils/imageProcessing';
+import { createVisionService, VisionAnalysisResult } from '@/lib/services/vision';
 
 interface AiPhotoEstimatePageProps {
   onBack: () => void;
@@ -27,45 +30,60 @@ export function AiPhotoEstimatePage({
   onSave,
   mealType,
 }: AiPhotoEstimatePageProps) {
-  const [photoUrl, setPhotoUrl] = useState<string>('');
+  const [selectedImage, setSelectedImage] = useState<ProcessedImage | null>(null);
   const [description, setDescription] = useState('');
   const [showEstimation, setShowEstimation] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<VisionAnalysisResult | null>(null);
   const [macros, setMacros] = useState({ protein: 0, fat: 0, carb: 0 });
   const [isEstimating, setIsEstimating] = useState(false);
+  
+  const visionService = createVisionService();
 
-  const handlePhotoCapture = (type: 'camera' | 'album') => {
-    // Simulate photo capture/selection
-    setPhotoUrl('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800');
-    toast.success(type === 'camera' ? '写真を撮影しました' : '写真を選択しました');
+  const handleImageSelect = (image: ProcessedImage) => {
+    setSelectedImage(image);
+    setShowEstimation(false);
+    setAnalysisResult(null);
+  };
+
+  const handleImageRemove = () => {
+    setSelectedImage(null);
+    setShowEstimation(false);
+    setAnalysisResult(null);
+    setMacros({ protein: 0, fat: 0, carb: 0 });
   };
 
   const handleEstimate = async () => {
-    if (!photoUrl) {
+    if (!selectedImage) {
       toast.error('写真を追加してください');
       return;
     }
 
     setIsEstimating(true);
 
-    // Simulate AI estimation with delay
-    setTimeout(() => {
-      const randomProtein = Math.floor(Math.random() * 40) + 10;
-      const randomFat = Math.floor(Math.random() * 30) + 5;
-      const randomCarb = Math.floor(Math.random() * 60) + 20;
-      
-      setMacros({ protein: randomProtein, fat: randomFat, carb: randomCarb });
+    try {
+      const result = await visionService.analyzeFood(selectedImage, description);
+      setAnalysisResult(result);
+      setMacros({
+        protein: result.totalProtein,
+        fat: result.totalFat,
+        carb: result.totalCarbs
+      });
       setShowEstimation(true);
-      setIsEstimating(false);
       toast.success('AI推定が完了しました');
-    }, 1500);
+    } catch (error) {
+      toast.error('AI推定に失敗しました');
+      console.error('Vision analysis error:', error);
+    } finally {
+      setIsEstimating(false);
+    }
   };
 
   const handleSaveEstimation = () => {
-    const totalCalories = macros.protein * 4 + macros.fat * 9 + macros.carb * 4;
-    
-    // Extract food name from description or use default
+    // Extract food name from analysis result or description
     let foodName = '料理';
-    if (description.trim()) {
+    if (analysisResult && analysisResult.items.length > 0) {
+      foodName = analysisResult.items.map(item => item.name).join('、');
+    } else if (description.trim()) {
       const firstLine = description.trim().split('\n')[0];
       foodName = firstLine.length > 30 ? firstLine.substring(0, 30) : firstLine;
     }
@@ -75,7 +93,7 @@ export function AiPhotoEstimatePage({
       quantity: 1,
       unit: '人前',
       macros,
-      photoUrl,
+      photoUrl: selectedImage?.dataUrl,
       description: description.trim(),
     });
 
@@ -117,50 +135,13 @@ export function AiPhotoEstimatePage({
           <CardHeader>
             <CardTitle>写真を追加</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {photoUrl ? (
-              <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
-                <img
-                  src={photoUrl}
-                  alt="料理の写真"
-                  className="w-full h-full object-cover"
-                />
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setPhotoUrl('')}
-                  className="absolute top-2 right-2"
-                >
-                  削除
-                </Button>
-              </div>
-            ) : (
-              <div className="aspect-video bg-muted rounded-lg flex flex-col items-center justify-center gap-2">
-                <Camera className="w-12 h-12 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  料理の写真を追加してください
-                </p>
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                onClick={() => handlePhotoCapture('camera')}
-                className="bg-primary hover:bg-accent"
-                disabled={!!photoUrl}
-              >
-                <Camera className="mr-2 h-4 w-4" />
-                カメラ起動
-              </Button>
-              <Button
-                onClick={() => handlePhotoCapture('album')}
-                variant="outline"
-                disabled={!!photoUrl}
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                アルバムから
-              </Button>
-            </div>
+          <CardContent>
+            <ImageUpload
+              onImageSelect={handleImageSelect}
+              onImageRemove={handleImageRemove}
+              selectedImage={selectedImage}
+              isProcessing={isEstimating}
+            />
           </CardContent>
         </Card>
 
@@ -188,7 +169,7 @@ export function AiPhotoEstimatePage({
           <Button
             onClick={handleEstimate}
             className="w-full bg-primary hover:bg-accent"
-            disabled={!photoUrl || isEstimating}
+            disabled={!selectedImage || isEstimating}
           >
             <Sparkles className="mr-2 h-5 w-5" />
             {isEstimating ? 'AI推定中...' : 'AI推定を実行'}
@@ -204,10 +185,35 @@ export function AiPhotoEstimatePage({
                 AI推定結果
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                推定カロリー: {Math.round(totalCalories)} kcal (信頼度: 82%)
+                推定カロリー: {Math.round(totalCalories)} kcal (信頼度: {analysisResult ? Math.round(analysisResult.overallConfidence * 100) : 82}%)
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* 検出された食品項目 */}
+              {analysisResult && analysisResult.items.length > 0 && (
+                <div className="space-y-3">
+                  <Label className="text-base">検出された食品</Label>
+                  <div className="space-y-2">
+                    {analysisResult.items.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex-1">
+                          <p className="font-medium">{item.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {item.quantity}{item.unit} • {item.calories}kcal
+                          </p>
+                        </div>
+                        <div className="text-sm text-right">
+                          <p>P: {item.protein}g</p>
+                          <p>F: {item.fat}g</p>
+                          <p>C: {item.carbs}g</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* マクロ栄養素の調整 */}
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <Label>タンパク質</Label>
@@ -218,7 +224,7 @@ export function AiPhotoEstimatePage({
                   onValueChange={(v) => setMacros({ ...macros, protein: v[0] })}
                   min={0}
                   max={100}
-                  step={1}
+                  step={0.1}
                   className="[&_[role=slider]]:bg-primary"
                 />
               </div>
@@ -233,7 +239,7 @@ export function AiPhotoEstimatePage({
                   onValueChange={(v) => setMacros({ ...macros, fat: v[0] })}
                   min={0}
                   max={100}
-                  step={1}
+                  step={0.1}
                   className="[&_[role=slider]]:bg-primary"
                 />
               </div>
@@ -248,7 +254,7 @@ export function AiPhotoEstimatePage({
                   onValueChange={(v) => setMacros({ ...macros, carb: v[0] })}
                   min={0}
                   max={200}
-                  step={1}
+                  step={0.1}
                   className="[&_[role=slider]]:bg-primary"
                 />
               </div>
