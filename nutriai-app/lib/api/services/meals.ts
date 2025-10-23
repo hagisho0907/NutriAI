@@ -3,10 +3,10 @@ import { apiClient } from '../client'
 import type {
   Meal,
   MealTemplate,
-  MealItem,
   MealAnalysis,
   MealStatistics,
 } from '../../../types/meal'
+import type { MealItem } from '../../../types/food'
 import type { PaginatedResponse } from '../../../types/api'
 
 export interface MealLogParams {

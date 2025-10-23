@@ -1,7 +1,7 @@
 import { ProcessedImage } from '../utils/imageProcessing';
 
 export interface StorageService {
-  uploadImage(image: ProcessedImage, path: string): Promise<UploadResult>;
+  uploadImage(image: ProcessedImage, path: string, onProgress?: (progress: UploadProgress) => void): Promise<UploadResult>;
   getPublicUrl(path: string): string;
   deleteImage(path: string): Promise<void>;
 }
@@ -22,21 +22,18 @@ export interface UploadProgress {
 export class MockStorageService implements StorageService {
   private mockDelay = 2000; // Simulate upload time
 
-  async uploadImage(image: ProcessedImage, path: string): Promise<UploadResult> {
-    // Simulate upload progress
-    const progressCallback = (progress: UploadProgress) => {
-      console.log(`Upload progress: ${progress.percentage}%`);
-    };
-
+  async uploadImage(image: ProcessedImage, path: string, onProgress?: (progress: UploadProgress) => void): Promise<UploadResult> {
     // Simulate chunks upload
     const chunks = 10;
     for (let i = 0; i <= chunks; i++) {
       await new Promise(resolve => setTimeout(resolve, this.mockDelay / chunks));
-      progressCallback({
-        loaded: (image.size / chunks) * i,
-        total: image.size,
-        percentage: (i / chunks) * 100
-      });
+      if (onProgress) {
+        onProgress({
+          loaded: (image.size / chunks) * i,
+          total: image.size,
+          percentage: (i / chunks) * 100
+        });
+      }
     }
 
     // Return mock result
