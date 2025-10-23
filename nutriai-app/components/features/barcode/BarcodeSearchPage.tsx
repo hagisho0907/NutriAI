@@ -171,24 +171,24 @@ export function BarcodeSearchPage({ onClose, onSelectFood }: BarcodeSearchPagePr
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div className="bg-gray-50 p-2 rounded">
                       <p className="text-xs text-gray-500">カロリー</p>
-                      <p className="font-medium">{food.calories} kcal</p>
+                      <p className="font-medium">{(food as any).calories} kcal</p>
                     </div>
                     <div className="bg-gray-50 p-2 rounded">
                       <p className="text-xs text-gray-500">たんぱく質</p>
-                      <p className="font-medium">{food.proteinG} g</p>
+                      <p className="font-medium">{(food as any).proteinG} g</p>
                     </div>
                     <div className="bg-gray-50 p-2 rounded">
                       <p className="text-xs text-gray-500">脂質</p>
-                      <p className="font-medium">{food.fatG} g</p>
+                      <p className="font-medium">{(food as any).fatG} g</p>
                     </div>
                     <div className="bg-gray-50 p-2 rounded">
                       <p className="text-xs text-gray-500">炭水化物</p>
-                      <p className="font-medium">{food.carbG} g</p>
+                      <p className="font-medium">{(food as any).carbG} g</p>
                     </div>
                   </div>
-                  {food.servingSize && (
+                  {(food as any).servingSize && (
                     <p className="text-xs text-gray-500 mt-2">
-                      1食分: {food.servingSize} {food.servingUnit}
+                      1食分: {(food as any).servingSize} {(food as any).servingUnit}
                     </p>
                   )}
                 </CardContent>

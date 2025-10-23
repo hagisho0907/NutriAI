@@ -251,8 +251,8 @@ export function MealLogPage({
           const recentFood = {
             id: food.id,
             name: food.name,
-            calories: food.calories,
-            serving: `${food.servingSize || '1'} ${food.servingUnit || '食分'}`,
+            calories: (food as any).calories,
+            serving: `${(food as any).servingSize || '1'} ${(food as any).servingUnit || '食分'}`,
             brand: food.brand,
           };
           handleSelectRecentFood(recentFood);
