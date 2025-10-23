@@ -69,10 +69,36 @@ export function AiPhotoEstimatePage({
         carb: result.totalCarbs
       });
       setShowEstimation(true);
-      toast.success('AI推定が完了しました');
+      
+      if (result.overallConfidence < 0.5) {
+        toast.warning('推定精度が低いです', {
+          description: '料理の詳細を記載すると精度が向上します'
+        });
+      } else {
+        toast.success('AI推定が完了しました', {
+          description: `信頼度: ${Math.round(result.overallConfidence * 100)}%`
+        });
+      }
     } catch (error) {
-      toast.error('AI推定に失敗しました');
       console.error('Vision analysis error:', error);
+      
+      if (error instanceof Error) {
+        if (error.message.includes('API')) {
+          toast.error('AI推定サービスが利用できません', {
+            description: 'しばらく時間をおいて再度お試しください'
+          });
+        } else if (error.message.includes('timeout')) {
+          toast.error('推定がタイムアウトしました', {
+            description: '画像サイズを小さくしてお試しください'
+          });
+        } else {
+          toast.error('AI推定に失敗しました', {
+            description: '手動で栄養素を入力することも可能です'
+          });
+        }
+      } else {
+        toast.error('予期しないエラーが発生しました');
+      }
     } finally {
       setIsEstimating(false);
     }

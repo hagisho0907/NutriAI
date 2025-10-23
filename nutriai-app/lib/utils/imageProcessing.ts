@@ -3,6 +3,8 @@ export interface ImageProcessingOptions {
   maxHeight?: number;
   quality?: number;
   format?: 'jpeg' | 'png' | 'webp';
+  progressive?: boolean;
+  stripMetadata?: boolean;
 }
 
 export interface ProcessedImage {
@@ -55,6 +57,10 @@ export async function processImage(
           reject(new Error('Failed to get canvas context'));
           return;
         }
+        
+        // Optimize canvas for better quality
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         
         // Draw and compress image
         ctx.drawImage(img, 0, 0, width, height);

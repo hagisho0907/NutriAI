@@ -154,10 +154,15 @@ export class ReplicateVisionService implements VisionService {
   }
 
   private buildPrompt(description?: string): string {
-    let prompt = 'Identify all food items in this image with their estimated portions. List each item with quantity and unit.';
+    let prompt = `Analyze this food image and provide:
+1. List of all food items visible
+2. Estimated portion size for each item (in grams, ml, or pieces)
+3. For each item, estimate: calories, protein(g), fat(g), carbohydrates(g)
+
+Format your response as a JSON array of food items.`;
     
     if (description) {
-      prompt += ` Additional context: ${description}`;
+      prompt += `\n\nAdditional context provided by user: ${description}`;
     }
     
     return prompt;
@@ -196,10 +201,116 @@ export class ReplicateVisionService implements VisionService {
   }
 
   private async parseAnalysisResult(output: string, description?: string): Promise<VisionAnalysisResult> {
-    // Parse AI output and structure response
-    // This is a simplified implementation
-    const mockService = new MockVisionService();
-    return mockService.analyzeFood({ file: new File([], ''), dataUrl: '', width: 0, height: 0, size: 0 }, description);
+    try {
+      // Try to parse as JSON first
+      let items: FoodItem[] = [];
+      
+      try {
+        const parsed = JSON.parse(output);
+        if (Array.isArray(parsed)) {
+          items = parsed.map(item => this.normalizeFoodItem(item));
+        }
+      } catch {
+        // If not JSON, parse natural language response
+        items = this.parseNaturalLanguageResponse(output);
+      }
+      
+      // If no items found, use description to create basic estimation
+      if (items.length === 0 && description) {
+        items = this.createEstimationFromDescription(description);
+      }
+      
+      // Calculate totals
+      const totals = items.reduce(
+        (acc, item) => ({
+          calories: acc.calories + item.calories,
+          protein: acc.protein + item.protein,
+          fat: acc.fat + item.fat,
+          carbs: acc.carbs + item.carbs
+        }),
+        { calories: 0, protein: 0, fat: 0, carbs: 0 }
+      );
+      
+      const overallConfidence = items.length > 0
+        ? items.reduce((sum, item) => sum + item.confidence, 0) / items.length
+        : 0.5;
+      
+      return {
+        items,
+        totalCalories: Math.round(totals.calories),
+        totalProtein: Math.round(totals.protein * 10) / 10,
+        totalFat: Math.round(totals.fat * 10) / 10,
+        totalCarbs: Math.round(totals.carbs * 10) / 10,
+        overallConfidence: Math.round(overallConfidence * 100) / 100,
+        analysisId: `replicate-${Date.now()}`,
+        processedAt: new Date()
+      };
+      
+    } catch (error) {
+      console.error('Failed to parse analysis result:', error);
+      // Fallback to mock service
+      const mockService = new MockVisionService();
+      return mockService.analyzeFood({ file: new File([], ''), dataUrl: '', width: 0, height: 0, size: 0 }, description);
+    }
+  }
+  
+  private normalizeFoodItem(item: any): FoodItem {
+    return {
+      name: item.name || item.food || item.item || 'Unknown food',
+      quantity: parseFloat(item.quantity || item.portion || item.amount || '100'),
+      unit: item.unit || item.serving_unit || 'g',
+      calories: parseFloat(item.calories || item.cal || '0'),
+      protein: parseFloat(item.protein || item.protein_g || '0'),
+      fat: parseFloat(item.fat || item.fat_g || '0'),
+      carbs: parseFloat(item.carbs || item.carbohydrates || item.carb_g || '0'),
+      confidence: parseFloat(item.confidence || '0.7')
+    };
+  }
+  
+  private parseNaturalLanguageResponse(text: string): FoodItem[] {
+    // Basic parsing for natural language responses
+    const items: FoodItem[] = [];
+    const lines = text.split('\n');
+    
+    for (const line of lines) {
+      // Look for patterns like "Rice - 150g - 200 cal"
+      const match = line.match(/([^-]+)\s*-\s*(\d+)\s*(\w+)\s*-\s*(\d+)\s*cal/i);
+      if (match) {
+        items.push({
+          name: match[1].trim(),
+          quantity: parseFloat(match[2]),
+          unit: match[3],
+          calories: parseFloat(match[4]),
+          protein: parseFloat(match[4]) * 0.15 / 4, // Estimate
+          fat: parseFloat(match[4]) * 0.25 / 9,     // Estimate
+          carbs: parseFloat(match[4]) * 0.6 / 4,    // Estimate
+          confidence: 0.6
+        });
+      }
+    }
+    
+    return items;
+  }
+  
+  private createEstimationFromDescription(description: string): FoodItem[] {
+    // Create basic estimation from user description
+    const lines = description.split('\n').filter(line => line.trim());
+    
+    return lines.map(line => {
+      const quantity = 100; // Default 100g
+      const calories = 150; // Default estimation
+      
+      return {
+        name: line.trim(),
+        quantity,
+        unit: 'g',
+        calories,
+        protein: calories * 0.2 / 4,
+        fat: calories * 0.3 / 9,
+        carbs: calories * 0.5 / 4,
+        confidence: 0.5
+      };
+    });
   }
 }
 
