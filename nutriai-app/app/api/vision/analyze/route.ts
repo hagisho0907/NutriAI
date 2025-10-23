@@ -117,12 +117,13 @@ export async function POST(request: NextRequest) {
       stack: appError.stack
     });
 
-    const shouldFallback =
-      processedImage &&
+    const canFallback =
+      processedImage !== null &&
       appError.code === 'API_ERROR' &&
       [401, 429, 503, 504].includes(appError.statusCode);
 
-    if (shouldFallback) {
+    if (canFallback) {
+      const fallbackImage = processedImage;
       console.warn('⚠️ Gemini APIのエラー。モック分析にフォールバックします。', {
         status: appError.statusCode,
         retryable: appError.retryable
@@ -130,7 +131,7 @@ export async function POST(request: NextRequest) {
       
       try {
         const fallbackService = new MockVisionService();
-        const fallbackResult = await fallbackService.analyzeFood(processedImage, description);
+        const fallbackResult = await fallbackService.analyzeFood(fallbackImage, description);
         const { rawResponse, ...publicFallback } = fallbackResult;
         
         return NextResponse.json(
