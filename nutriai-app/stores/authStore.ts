@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { User, UserWithProfile, UserProfile, CreateUserGoalRequest } from '../types/user';
-import { authService, APIError } from '../lib/api/services';
+import { User, UserWithProfile, UserProfile, CreateUserGoalRequest } from '../../nutriai-app/types';
 
 interface AuthStore {
   // State
@@ -38,14 +37,34 @@ export const useAuthStore = create<AuthStore>()(
       login: async (email: string, password: string) => {
         set({ loading: true, error: null });
         try {
-          const response = await authService.login({ email, password });
+          // TODO: Replace with actual API call
+          // Simulate API call
+          await new Promise(resolve => setTimeout(resolve, 1000));
           
-          // Get full user profile
-          const userProfile = await authService.getCurrentUser();
+          // Mock user data
+          const mockUser: UserWithProfile = {
+            id: '1',
+            email,
+            loginProvider: 'email',
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            profile: {
+              userId: '1',
+              displayName: 'John Doe',
+              gender: 'male',
+              birthDate: '1994-01-01',
+              heightCm: 175,
+              activityLevel: 'moderate',
+              bodyFatPct: 15
+            }
+          };
+
+          const mockToken = 'mock-jwt-token';
 
           set({
-            user: userProfile,
-            token: response.tokens.accessToken,
+            user: mockUser,
+            token: mockToken,
             isAuthenticated: true,
             loading: false,
             error: null
@@ -53,7 +72,7 @@ export const useAuthStore = create<AuthStore>()(
         } catch (error) {
           set({
             loading: false,
-            error: error instanceof APIError ? error.message : 'Login failed'
+            error: error instanceof Error ? error.message : 'Login failed'
           });
         }
       },
@@ -70,18 +89,28 @@ export const useAuthStore = create<AuthStore>()(
       register: async (email: string, password: string, name: string) => {
         set({ loading: true, error: null });
         try {
-          const response = await authService.register({
-            email,
-            password,
-            displayName: name
-          });
+          // TODO: Replace with actual API call
+          await new Promise(resolve => setTimeout(resolve, 1000));
           
-          // Get full user profile
-          const userProfile = await authService.getCurrentUser();
+          const mockUser: UserWithProfile = {
+            id: '1',
+            email,
+            loginProvider: 'email',
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            profile: {
+              userId: '1',
+              displayName: name,
+              activityLevel: 'moderate'
+            }
+          };
+
+          const mockToken = 'mock-jwt-token';
 
           set({
-            user: userProfile,
-            token: response.tokens.accessToken,
+            user: mockUser,
+            token: mockToken,
             isAuthenticated: true,
             loading: false,
             error: null
@@ -89,7 +118,7 @@ export const useAuthStore = create<AuthStore>()(
         } catch (error) {
           set({
             loading: false,
-            error: error instanceof APIError ? error.message : 'Registration failed'
+            error: error instanceof Error ? error.message : 'Registration failed'
           });
         }
       },
@@ -144,19 +173,18 @@ export const useAuthStore = create<AuthStore>()(
 
         set({ loading: true });
         try {
-          const userProfile = await authService.getCurrentUser();
-          set({ 
-            user: userProfile,
-            loading: false, 
-            isAuthenticated: true 
-          });
+          // TODO: Replace with actual API call to verify token
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // If token is valid, user data should already be in state
+          set({ loading: false, isAuthenticated: true });
         } catch (error) {
           set({
             user: null,
             token: null,
             isAuthenticated: false,
             loading: false,
-            error: error instanceof APIError ? error.message : 'Authentication failed'
+            error: 'Authentication failed'
           });
         }
       }

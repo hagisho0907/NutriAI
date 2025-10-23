@@ -1,21 +1,26 @@
 import React, { useRef, useState, useCallback } from 'react';
-import { Camera, Image as ImageIcon, X } from 'lucide-react';
+import { Camera, Image as ImageIcon, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { processImage, validateImage, ProcessedImage } from '@/lib/utils/imageProcessing';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 
 interface ImageUploadProps {
   onImageSelect: (image: ProcessedImage) => void;
   onImageRemove?: () => void;
   selectedImage?: ProcessedImage | null;
   isProcessing?: boolean;
+  uploadProgress?: number;
+  isUploading?: boolean;
 }
 
 export function ImageUpload({
   onImageSelect,
   onImageRemove,
   selectedImage,
-  isProcessing = false
+  isProcessing = false,
+  uploadProgress = 0,
+  isUploading = false
 }: ImageUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -28,27 +33,16 @@ export function ImageUpload({
 
     const validation = validateImage(file);
     if (!validation.valid) {
-      toast({
-        title: 'エラー',
-        description: validation.error,
-        variant: 'destructive'
-      });
+      toast.error(validation.error);
       return;
     }
 
     try {
       const processed = await processImage(file);
       onImageSelect(processed);
-      toast({
-        title: '画像を選択しました',
-        description: `${(processed.size / 1024).toFixed(1)}KB に圧縮されました`
-      });
+      toast.success(`画像を選択しました (${(processed.size / 1024).toFixed(1)}KB)`);
     } catch (error) {
-      toast({
-        title: 'エラー',
-        description: '画像の処理に失敗しました',
-        variant: 'destructive'
-      });
+      toast.error('画像の処理に失敗しました');
     }
   }, [onImageSelect]);
 
@@ -64,11 +58,7 @@ export function ImageUpload({
         setIsCapturing(true);
       }
     } catch (error) {
-      toast({
-        title: 'エラー',
-        description: 'カメラの起動に失敗しました',
-        variant: 'destructive'
-      });
+      toast.error('カメラの起動に失敗しました');
     }
   }, []);
 
@@ -104,16 +94,9 @@ export function ImageUpload({
         const processed = await processImage(file);
         onImageSelect(processed);
         stopCamera();
-        toast({
-          title: '写真を撮影しました',
-          description: '栄養価の推定を開始します'
-        });
+        toast.success('写真を撮影しました');
       } catch (error) {
-        toast({
-          title: 'エラー',
-          description: '画像の処理に失敗しました',
-          variant: 'destructive'
-        });
+        toast.error('画像の処理に失敗しました');
       }
     }, 'image/jpeg', 0.9);
   }, [onImageSelect, stopCamera]);
@@ -172,7 +155,7 @@ export function ImageUpload({
             alt="選択された食事画像"
             className="w-full h-full object-cover"
           />
-          {onImageRemove && (
+          {onImageRemove && !isUploading && !isProcessing && (
             <Button
               size="icon"
               variant="ghost"
@@ -181,6 +164,28 @@ export function ImageUpload({
             >
               <X className="w-5 h-5" />
             </Button>
+          )}
+          
+          {/* Upload/Processing Overlay */}
+          {(isUploading || isProcessing) && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <div className="bg-white rounded-lg p-4 w-3/4 max-w-sm">
+                <div className="flex items-center gap-3 mb-3">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span className="text-sm font-medium">
+                    {isUploading ? 'アップロード中...' : 'AI分析中...'}
+                  </span>
+                </div>
+                {isUploading && (
+                  <div className="space-y-2">
+                    <Progress value={uploadProgress} className="h-2" />
+                    <p className="text-xs text-muted-foreground text-right">
+                      {uploadProgress}%
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
         <p className="text-sm text-muted-foreground text-center">
