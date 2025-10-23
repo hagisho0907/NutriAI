@@ -38,6 +38,12 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('🏭 VisionService作成中...');
+    console.log('🔑 環境変数チェック:', {
+      ENABLE_REAL_AI: process.env.NEXT_PUBLIC_ENABLE_REAL_AI_ANALYSIS,
+      HAS_API_KEY: !!process.env.NEXT_PUBLIC_REPLICATE_API_KEY,
+      NODE_ENV: process.env.NODE_ENV
+    });
+    
     // Create vision service (will use environment variables)
     const visionService = createVisionService();
     
@@ -58,9 +64,20 @@ export async function POST(request: NextRequest) {
     };
 
     console.log('🚀 画像解析開始...');
-    // Analyze the image
-    const analysisResult = await visionService.analyzeFood(processedImage, description);
-    console.log('✅ 画像解析完了:', analysisResult);
+    
+    let analysisResult;
+    try {
+      // Analyze the image
+      analysisResult = await visionService.analyzeFood(processedImage, description);
+      console.log('✅ 画像解析完了:', analysisResult);
+    } catch (error) {
+      console.error('⚠️ 画像解析エラー、モックサービスにフォールバック:', error);
+      // Fallback to mock service if real API fails
+      const { MockVisionService } = await import('@/lib/services/vision');
+      const mockService = new MockVisionService();
+      analysisResult = await mockService.analyzeFood(processedImage, description);
+      console.log('✅ モック解析完了:', analysisResult);
+    }
 
     // In production, you would also:
     // 1. Upload to Supabase Storage

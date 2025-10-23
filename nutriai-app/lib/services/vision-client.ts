@@ -15,14 +15,25 @@ export class ClientVisionService implements VisionService {
       body: formData,
     });
 
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+    let result;
+    try {
+      result = await response.json();
+    } catch (e) {
+      console.error('❌ レスポンスのパースエラー:', e);
+      throw new Error(`API error: ${response.status} - Response parsing failed`);
     }
 
-    const result = await response.json();
+    if (!response.ok) {
+      console.error('❌ APIエラーレスポンス:', {
+        status: response.status,
+        statusText: response.statusText,
+        result: result
+      });
+      throw new Error(result.details || result.error || `API error: ${response.status}`);
+    }
     
-    if (!response.ok || !result.success) {
-      console.error('❌ APIエラーレスポンス:', result);
+    if (!result.success) {
+      console.error('❌ 解析失敗:', result);
       throw new Error(result.details || result.error || 'Analysis failed');
     }
 
