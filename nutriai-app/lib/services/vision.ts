@@ -120,13 +120,22 @@ export class ReplicateVisionService implements VisionService {
             input: {
               image: base64Image,
               question: this.buildPrompt(description),
+              temperature: 0.7,
+              top_p: 0.9,
+              max_tokens: 512
             },
           }),
         });
 
         if (!response.ok) {
+          const errorData = await response.text();
+          console.error('❌ Replicate APIエラー:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData
+          });
           throw new APIError(
-            `Replicate API error: ${response.status}`,
+            `Replicate API error: ${response.status} - ${errorData}`,
             response.status,
             response.status >= 500
           );
@@ -160,15 +169,10 @@ export class ReplicateVisionService implements VisionService {
   }
 
   private buildPrompt(description?: string): string {
-    let prompt = `Analyze this food image and provide:
-1. List of all food items visible
-2. Estimated portion size for each item (in grams, ml, or pieces)
-3. For each item, estimate: calories, protein(g), fat(g), carbohydrates(g)
-
-Format your response as a JSON array of food items.`;
+    let prompt = `What food items are in this image? Please identify each food item and estimate the portion size.`;
     
     if (description) {
-      prompt += `\n\nAdditional context provided by user: ${description}`;
+      prompt = `${description}. What specific food items can you see in this image?`;
     }
     
     return prompt;

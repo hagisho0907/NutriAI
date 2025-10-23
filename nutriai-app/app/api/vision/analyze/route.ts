@@ -65,19 +65,9 @@ export async function POST(request: NextRequest) {
 
     console.log('🚀 画像解析開始...');
     
-    let analysisResult;
-    try {
-      // Analyze the image
-      analysisResult = await visionService.analyzeFood(processedImage, description);
-      console.log('✅ 画像解析完了:', analysisResult);
-    } catch (error) {
-      console.error('⚠️ 画像解析エラー、モックサービスにフォールバック:', error);
-      // Fallback to mock service if real API fails
-      const { MockVisionService } = await import('@/lib/services/vision');
-      const mockService = new MockVisionService();
-      analysisResult = await mockService.analyzeFood(processedImage, description);
-      console.log('✅ モック解析完了:', analysisResult);
-    }
+    // Analyze the image
+    const analysisResult = await visionService.analyzeFood(processedImage, description);
+    console.log('✅ 画像解析完了:', analysisResult);
 
     // In production, you would also:
     // 1. Upload to Supabase Storage
