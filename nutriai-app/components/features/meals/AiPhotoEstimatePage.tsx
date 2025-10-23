@@ -53,12 +53,19 @@ export function AiPhotoEstimatePage({
   };
 
   const handleEstimate = async () => {
+    console.log('🤖 AI推定ボタンがクリックされました');
+    console.log('📷 選択された画像:', selectedImage);
+    console.log('🔑 APIキー設定:', process.env.NEXT_PUBLIC_REPLICATE_API_KEY ? '設定済み' : '未設定');
+    console.log('🚀 リアルAI:', process.env.NEXT_PUBLIC_ENABLE_REAL_AI_ANALYSIS);
+    
     if (!selectedImage) {
+      console.log('❌ 画像が選択されていません');
       toast.error('写真を追加してください');
       return;
     }
 
     setIsEstimating(true);
+    console.log('⏳ AI推定を開始します...');
 
     try {
       const result = await visionService.analyzeFood(selectedImage, description);
