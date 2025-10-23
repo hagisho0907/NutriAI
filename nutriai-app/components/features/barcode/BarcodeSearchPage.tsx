@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Badge } from '../../ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../ui/dialog';
 import { Label } from '../../ui/label';
-import { mockFoods, type Food } from '../../../lib/mockData';
+import { mockFoods } from '../../../lib/mockData';
+import type { Food } from '../../../types';
 
 interface BarcodeSearchPageProps {
   onClose?: () => void;
@@ -40,7 +41,7 @@ export function BarcodeSearchPage({ onClose, onSelectFood }: BarcodeSearchPagePr
       (food) =>
         food.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         food.brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        food.janCode?.includes(searchQuery) ||
+        (food as any).janCode?.includes(searchQuery) ||
         food.category?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
