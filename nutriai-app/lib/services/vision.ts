@@ -21,6 +21,9 @@ export interface VisionAnalysisResult {
   totalCarbs: number;
   overallConfidence: number;
   analysisId: string;
+  provider: string;
+  fallback: boolean;
+  rawResponse?: unknown;
   processedAt: Date;
 }
 
@@ -88,162 +91,205 @@ export class MockVisionService implements VisionService {
       totalCarbs: Math.round(totals.carbs * 10) / 10,
       overallConfidence: Math.round(overallConfidence * 100) / 100,
       analysisId: `mock-${Date.now()}`,
+      provider: 'mock',
+      fallback: true,
       processedAt: new Date()
     };
   }
 }
 
-// Replicate service implementation
-export class ReplicateVisionService implements VisionService {
-  constructor(private apiKey: string) {}
-  
+interface GeminiConfig {
+  model?: string;
+  temperature?: number;
+  maxOutputTokens?: number;
+  timeoutMs?: number;
+}
+
+// Gemini service implementation
+export class GeminiVisionService implements VisionService {
+  constructor(
+    private apiKey: string,
+    private config: GeminiConfig = {}
+  ) {}
+
   async analyzeFood(image: ProcessedImage, description?: string): Promise<VisionAnalysisResult> {
     return retryVisionAnalysis(async () => {
+      const payload = await this.buildRequestPayload(image, description);
+      const controller = new AbortController();
+      const timeoutMs =
+        this.config.timeoutMs ??
+        (process.env.GEMINI_TIMEOUT_MS ? parseInt(process.env.GEMINI_TIMEOUT_MS, 10) : 20000);
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
       try {
-        console.log('🚀 ReplicateVisionService: 分析開始');
-        console.log('🔑 APIキー長:', this.apiKey?.length || 0);
-        
-        // Convert image to base64 for API call
-        const base64Image = await this.imageToBase64(image);
-        console.log('📷 Base64変換完了:', base64Image.substring(0, 50) + '...');
-        
-        // Call Replicate API
-        console.log('📡 Replicate API呼び出し中...');
-        const response = await fetch('https://api.replicate.com/v1/predictions', {
+        const model = this.config.model || process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite-preview-02-05';
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${this.apiKey}`;
+
+        console.log('🚀 GeminiVisionService: 分析開始');
+        console.log('🧠 モデル:', model);
+
+        const response = await fetch(url, {
           method: 'POST',
           headers: {
-            'Authorization': `Token ${this.apiKey}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            version: 'andreasjansson/blip-2:4b32258c42e9efd4288bb9910bc532a69727f9acd26aa08e175713a0a857a608',
-            input: {
-              image: base64Image,
-              question: this.buildPrompt(description),
-              temperature: 0.7,
-              top_p: 0.9,
-              max_tokens: 512
-            },
-          }),
+          body: JSON.stringify(payload),
+          signal: controller.signal
         });
 
         if (!response.ok) {
-          const errorData = await response.text();
-          console.error('❌ Replicate APIエラー:', {
+          const errorText = await response.text();
+          console.error('❌ Gemini APIエラー:', {
             status: response.status,
             statusText: response.statusText,
-            error: errorData
+            error: errorText
           });
+
+          const retryable = response.status >= 500 && response.status < 600;
           throw new APIError(
-            `Replicate API error: ${response.status} - ${errorData}`,
+            `Gemini API error: ${response.status} - ${errorText}`,
             response.status,
-            response.status >= 500
+            retryable
           );
         }
 
-        const prediction = await response.json();
-        console.log('📋 予測作成レスポンス:', prediction);
-        
-        // Poll for results
-        const result = await this.pollForResult(prediction.urls.get);
-        
-        // Parse and structure the response
-        return this.parseAnalysisResult(result.output, description);
-        
+        const data = await response.json();
+        console.log('📋 Geminiレスポンス受信');
+
+        return this.parseResponse(data, description);
       } catch (error) {
         if (error instanceof APIError) {
           throw error;
         }
-        throw new VisionAnalysisError(`Failed to analyze image: ${error}`);
+
+        if (error instanceof Error && error.name === 'AbortError') {
+          throw new APIError('Gemini request timed out', 504, true);
+        }
+
+        throw new VisionAnalysisError(`Failed to analyze image via Gemini: ${error}`);
+      } finally {
+        clearTimeout(timeoutId);
       }
     });
   }
 
-  private async imageToBase64(image: ProcessedImage): Promise<string> {
-    // If dataUrl is already provided, use it
+  private async buildRequestPayload(image: ProcessedImage, description?: string): Promise<{
+    contents: Array<{
+      role: string;
+      parts: Array<Record<string, unknown>>;
+    }>;
+    generationConfig: {
+      temperature: number;
+      maxOutputTokens: number;
+      responseMimeType: string;
+    };
+  }> {
+    const base64 = await this.ensureBase64(image);
+    const mimeType = (image.file && image.file.type) || 'image/jpeg';
+    const sanitizedDescription = (description || '').trim().substring(0, 500);
+
+    const instruction = [
+      'You are a Japanese nutrition assistant. Analyze the meal photo and provide estimates.',
+      'Respond ONLY with valid JSON matching this schema:',
+      '{',
+      '  "items": [',
+      '    {',
+      '      "name": "string (food item name)",',
+      '      "quantity": number (amount in grams),',
+      '      "unit": "string (unit, default g)",',
+      '      "calories": number (kcal),',
+      '      "protein": number (grams),',
+      '      "fat": number (grams),',
+      '      "carbs": number (grams),',
+      '      "confidence": number (0-1)',
+      '    }',
+      '  ],',
+      '  "notes": "optional short string"',
+      '}',
+      'Identify up to 3 prominent food items. If unsure about a value, provide your best estimate.',
+      'Do not include any text outside the JSON object.'
+    ].join('\n');
+
+    const userContext = sanitizedDescription
+      ? `User provided description:\n${sanitizedDescription}`
+      : 'No additional description provided by the user.';
+
+    const temperature = this.config.temperature ?? (process.env.GEMINI_TEMPERATURE ? parseFloat(process.env.GEMINI_TEMPERATURE) : 0.2);
+    const maxOutputTokens = this.config.maxOutputTokens ?? (process.env.GEMINI_MAX_OUTPUT_TOKENS ? parseInt(process.env.GEMINI_MAX_OUTPUT_TOKENS, 10) : 512);
+
+    return {
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: instruction },
+            { text: userContext },
+            {
+              inlineData: {
+                mimeType,
+                data: base64
+              }
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: Number.isFinite(temperature) ? Number(temperature) : 0.2,
+        maxOutputTokens: Number.isFinite(maxOutputTokens) ? Number(maxOutputTokens) : 512,
+        responseMimeType: 'application/json'
+      }
+    };
+  }
+
+  private async ensureBase64(image: ProcessedImage): Promise<string> {
     if (image.dataUrl) {
-      return image.dataUrl;
+      return this.extractBase64(image.dataUrl);
     }
-    
-    // For server-side, we need to handle File differently
+
     if (typeof window === 'undefined') {
-      // This should not happen as we convert in API route
-      throw new Error('Cannot convert File to base64 on server-side without dataUrl');
+      throw new Error('Processed image missing dataUrl');
     }
-    
-    // Client-side FileReader (not used in current flow)
+
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
+      reader.onload = () => resolve(this.extractBase64(reader.result as string));
       reader.onerror = () => reject(new Error('Failed to convert image to base64'));
       reader.readAsDataURL(image.file);
     });
   }
 
-  private buildPrompt(description?: string): string {
-    let prompt = `What food items are in this image? Please identify each food item and estimate the portion size.`;
-    
-    if (description) {
-      prompt = `${description}. What specific food items can you see in this image?`;
+  private extractBase64(dataUrl: string): string {
+    if (!dataUrl) {
+      throw new Error('Invalid data URL');
     }
-    
-    return prompt;
+
+    if (dataUrl.startsWith('data:')) {
+      const commaIndex = dataUrl.indexOf(',');
+      return commaIndex >= 0 ? dataUrl.substring(commaIndex + 1) : dataUrl;
+    }
+
+    return dataUrl;
   }
 
-  private async pollForResult(getUrl: string): Promise<any> {
-    let attempts = 0;
-    const maxAttempts = 30; // 30 seconds max
-    
-    while (attempts < maxAttempts) {
-      const response = await fetch(getUrl, {
-        headers: {
-          'Authorization': `Token ${this.apiKey}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new APIError(`Failed to get prediction status: ${response.status}`, response.status);
-      }
-
-      const result = await response.json();
-      
-      if (result.status === 'succeeded') {
-        return result;
-      }
-      
-      if (result.status === 'failed') {
-        throw new VisionAnalysisError('Image analysis failed');
-      }
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      attempts++;
-    }
-    
-    throw new VisionAnalysisError('Analysis timeout');
-  }
-
-  private async parseAnalysisResult(output: string, description?: string): Promise<VisionAnalysisResult> {
+  private parseResponse(response: any, description?: string): VisionAnalysisResult {
     try {
-      console.log('🔍 解析結果をパース中:', output);
-      
-      // BLIP-2 returns natural language, so parse it
-      let items = this.parseNaturalLanguageResponse(output);
-      
-      // If no items found, create basic estimation
-      if (items.length === 0) {
-        items = [{
-          name: description || 'Food item',
-          quantity: 100,
-          unit: 'g',
-          calories: 200,
-          protein: 10,
-          fat: 8,
-          carbs: 25,
-          confidence: 0.5
-        }];
+      const payload = this.extractJsonPayload(response);
+      const candidateItems = this.extractCandidateItems(payload);
+      let items = candidateItems
+        .map((candidate: any) => this.normalizeFoodItem(candidate))
+        .filter(item => !Number.isNaN(item.calories));
+      let fallback = false;
+
+      if (items.length === 0 && description) {
+        items = this.createEstimationFromDescription(description);
+        fallback = true;
       }
-      
-      // Calculate totals
+
+      if (items.length === 0) {
+        items = [this.createFallbackItem(description)];
+        fallback = true;
+      }
+
       const totals = items.reduce(
         (acc, item) => ({
           calories: acc.calories + item.calories,
@@ -253,11 +299,11 @@ export class ReplicateVisionService implements VisionService {
         }),
         { calories: 0, protein: 0, fat: 0, carbs: 0 }
       );
-      
+
       const overallConfidence = items.length > 0
-        ? items.reduce((sum, item) => sum + item.confidence, 0) / items.length
-        : 0.7;
-      
+        ? items.reduce((sum, item) => sum + (item.confidence || 0.6), 0) / items.length
+        : 0.6;
+
       return {
         items,
         totalCalories: Math.round(totals.calories),
@@ -265,93 +311,270 @@ export class ReplicateVisionService implements VisionService {
         totalFat: Math.round(totals.fat * 10) / 10,
         totalCarbs: Math.round(totals.carbs * 10) / 10,
         overallConfidence: Math.round(overallConfidence * 100) / 100,
-        analysisId: `replicate-${Date.now()}`,
+        analysisId: `gemini-${Date.now()}`,
+        provider: 'gemini',
+        fallback,
+        rawResponse: response,
         processedAt: new Date()
       };
-      
     } catch (error) {
-      console.error('解析結果のパースエラー:', error);
-      // Return basic estimation
+      console.error('❌ Geminiレスポンス解析エラー:', error);
+
+      const fallbackItem = this.createFallbackItem(description);
       return {
-        items: [{
-          name: 'Food item',
-          quantity: 100,
-          unit: 'g',
-          calories: 200,
-          protein: 10,
-          fat: 8,
-          carbs: 25,
-          confidence: 0.5
-        }],
-        totalCalories: 200,
-        totalProtein: 10,
-        totalFat: 8,
-        totalCarbs: 25,
+        items: [fallbackItem],
+        totalCalories: fallbackItem.calories,
+        totalProtein: fallbackItem.protein,
+        totalFat: fallbackItem.fat,
+        totalCarbs: fallbackItem.carbs,
         overallConfidence: 0.5,
-        analysisId: `error-${Date.now()}`,
+        analysisId: `gemini-fallback-${Date.now()}`,
+        provider: 'gemini',
+        fallback: true,
+        rawResponse: response,
         processedAt: new Date()
       };
     }
   }
-  
-  private normalizeFoodItem(item: any): FoodItem {
-    return {
-      name: item.name || item.food || item.item || 'Unknown food',
-      quantity: parseFloat(item.quantity || item.portion || item.amount || '100'),
-      unit: item.unit || item.serving_unit || 'g',
-      calories: parseFloat(item.calories || item.cal || '0'),
-      protein: parseFloat(item.protein || item.protein_g || '0'),
-      fat: parseFloat(item.fat || item.fat_g || '0'),
-      carbs: parseFloat(item.carbs || item.carbohydrates || item.carb_g || '0'),
-      confidence: parseFloat(item.confidence || '0.7')
-    };
-  }
-  
-  private parseNaturalLanguageResponse(text: string): FoodItem[] {
-    // Basic parsing for natural language responses
-    const items: FoodItem[] = [];
-    const lines = text.split('\n');
-    
-    for (const line of lines) {
-      // Look for patterns like "Rice - 150g - 200 cal"
-      const match = line.match(/([^-]+)\s*-\s*(\d+)\s*(\w+)\s*-\s*(\d+)\s*cal/i);
-      if (match) {
-        items.push({
-          name: match[1].trim(),
-          quantity: parseFloat(match[2]),
-          unit: match[3],
-          calories: parseFloat(match[4]),
-          protein: parseFloat(match[4]) * 0.15 / 4, // Estimate
-          fat: parseFloat(match[4]) * 0.25 / 9,     // Estimate
-          carbs: parseFloat(match[4]) * 0.6 / 4,    // Estimate
-          confidence: 0.6
-        });
+
+  private extractJsonPayload(response: any): any | null {
+    if (!response) {
+      return null;
+    }
+
+    const candidates = Array.isArray(response.candidates) ? response.candidates : [];
+    for (const candidate of candidates) {
+      const parts = this.extractParts(candidate);
+      for (const part of parts) {
+        const text = this.extractText(part);
+        if (text) {
+          const parsed = this.parseJsonString(text);
+          if (parsed) {
+            return parsed;
+          }
+        }
       }
     }
-    
-    return items;
+
+    return null;
   }
-  
+
+  private extractParts(candidate: any): any[] {
+    if (!candidate) return [];
+    if (Array.isArray(candidate.content?.parts)) {
+      return candidate.content.parts;
+    }
+    if (Array.isArray(candidate.content)) {
+      return candidate.content;
+    }
+    return [];
+  }
+
+  private extractText(part: any): string | null {
+    if (!part) return null;
+    if (typeof part === 'string') {
+      return part.trim();
+    }
+    if (typeof part.text === 'string') {
+      return part.text.trim();
+    }
+    if (Array.isArray(part)) {
+      for (const inner of part) {
+        const text = this.extractText(inner);
+        if (text) return text;
+      }
+    }
+    return null;
+  }
+
+  private parseJsonString(text: string): any | null {
+    if (!text) return null;
+    const trimmed = text.trim();
+    const attempts = [trimmed];
+
+    const match = trimmed.match(/\{[\s\S]*\}/);
+    if (match) {
+      attempts.push(match[0]);
+    }
+
+    for (const attempt of attempts) {
+      try {
+        return JSON.parse(attempt);
+      } catch {
+        continue;
+      }
+    }
+    return null;
+  }
+
+  private extractCandidateItems(payload: any): any[] {
+    if (!payload) {
+      return [];
+    }
+
+    if (Array.isArray(payload)) {
+      return payload;
+    }
+
+    if (Array.isArray(payload.items)) {
+      return payload.items;
+    }
+
+    if (Array.isArray(payload.foods)) {
+      return payload.foods;
+    }
+
+    return [];
+  }
+
+  private normalizeFoodItem(item: any): FoodItem {
+    const name =
+      item.name ||
+      item.food_name ||
+      item.label ||
+      item.title ||
+      'Unknown food';
+
+    const nutrition =
+      item.nutrition ||
+      item.nutrients ||
+      {};
+
+    const calories =
+      this.parseNumber(item.calories) ||
+      this.parseNumber(item.calories_kcal) ||
+      this.parseNumber(nutrition.kcal) ||
+      this.parseNumber(nutrition.calories) ||
+      this.parseNumber(nutrition.calories_kcal) ||
+      0;
+
+    const protein =
+      this.parseNumber(nutrition.protein) ||
+      this.parseNumber(nutrition.protein_g) ||
+      this.parseNumber(item.protein) ||
+      this.parseNumber(item.protein_g) ||
+      this.estimateMacroFromCalories(calories, 0.15);
+
+    const fat =
+      this.parseNumber(nutrition.fat) ||
+      this.parseNumber(nutrition.fat_g) ||
+      this.parseNumber(item.fat) ||
+      this.parseNumber(item.fat_g) ||
+      this.estimateMacroFromCalories(calories, 0.25, 9);
+
+    const carbs =
+      this.parseNumber(nutrition.carbs) ||
+      this.parseNumber(nutrition.carb) ||
+      this.parseNumber(nutrition.carbohydrates) ||
+      this.parseNumber(item.carbs) ||
+      this.parseNumber(item.carbs_g) ||
+      this.estimateMacroFromCalories(calories, 0.6);
+
+    const quantity =
+      this.parseNumber(item.quantity) ||
+      this.parseNumber(item.portion) ||
+      this.parseNumber(item.amount) ||
+      this.parseNumber(item.quantity_g) ||
+      this.parseNumber(item.quantity_in_grams) ||
+      this.parseNumber(item.mass_g) ||
+      100;
+
+    const unit =
+      (item.unit ||
+        item.unit_name ||
+        item.serving_unit ||
+        'g').toString();
+
+    let confidence =
+      this.parseNumber(item.confidence) ||
+      this.parseNumber(item.confidence_score) ||
+      this.parseNumber(item.confidence_pct) ||
+      this.parseNumber(item.probability) ||
+      0.75;
+
+    if (confidence > 1) {
+      confidence = confidence / 100;
+    }
+    if (!confidence || confidence < 0) {
+      confidence = 0.6;
+    }
+
+    return {
+      name: String(name),
+      quantity,
+      unit,
+      calories: Math.max(0, Math.round(calories)),
+      protein: Math.max(0, Math.round(protein * 10) / 10),
+      fat: Math.max(0, Math.round(fat * 10) / 10),
+      carbs: Math.max(0, Math.round(carbs * 10) / 10),
+      confidence: Math.min(1, Math.max(0, Math.round(confidence * 100) / 100))
+    };
+  }
+
+  private parseNumber(value: any): number | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : null;
+    }
+
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    if (typeof value === 'object' && 'value' in value) {
+      return this.parseNumber(value.value);
+    }
+
+    return null;
+  }
+
+  private estimateMacroFromCalories(calories: number, ratio: number, kcalPerGram: number = 4): number {
+    if (!calories || calories <= 0) {
+      return 0;
+    }
+    return (calories * ratio) / kcalPerGram;
+  }
+
+  private createFallbackItem(description?: string): FoodItem {
+    const name = description?.split('\n').filter(Boolean)[0] || 'Unknown meal';
+    const calories = 200;
+
+    return {
+      name,
+      quantity: 100,
+      unit: 'g',
+      calories,
+      protein: Math.round((calories * 0.2 / 4) * 10) / 10,
+      fat: Math.round((calories * 0.3 / 9) * 10) / 10,
+      carbs: Math.round((calories * 0.5 / 4) * 10) / 10,
+      confidence: 0.5
+    };
+  }
+
   private createEstimationFromDescription(description: string): FoodItem[] {
-    // Create basic estimation from user description
-    const lines = description.split('\n').filter(line => line.trim());
-    
-    return lines.map(line => {
-      const quantity = 100; // Default 100g
-      const calories = 150; // Default estimation
-      
-      return {
-        name: line.trim(),
-        quantity,
-        unit: 'g',
-        calories,
-        protein: calories * 0.2 / 4,
-        fat: calories * 0.3 / 9,
-        carbs: calories * 0.5 / 4,
-        confidence: 0.5
-      };
-    });
+    return description
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(line => {
+        const calories = 180;
+        return {
+          name: line,
+          quantity: 100,
+          unit: 'g',
+          calories,
+          protein: Math.round((calories * 0.2 / 4) * 10) / 10,
+          fat: Math.round((calories * 0.3 / 9) * 10) / 10,
+          carbs: Math.round((calories * 0.5 / 4) * 10) / 10,
+          confidence: 0.55
+        };
+      });
   }
+
 }
 
 // Factory function to get appropriate service
@@ -361,19 +584,45 @@ export function createVisionService(): VisionService {
   
   // Only use real API on server-side with proper API key
   if (isServer) {
-    const useRealAPI = process.env.NEXT_PUBLIC_ENABLE_REAL_AI_ANALYSIS === 'true';
-    const apiKey = process.env.REPLICATE_API_KEY; // Note: No NEXT_PUBLIC_ prefix
+    const useGemini =
+      process.env.NEXT_PUBLIC_ENABLE_GEMINI === 'true' ||
+      process.env.NEXT_PUBLIC_ENABLE_REAL_AI_ANALYSIS === 'true';
+    const apiKey = process.env.GOOGLE_AI_API_KEY;
+    const config: GeminiConfig = {};
+
+    if (process.env.GEMINI_MODEL) {
+      config.model = process.env.GEMINI_MODEL;
+    }
+    if (process.env.GEMINI_TEMPERATURE) {
+      const parsed = parseFloat(process.env.GEMINI_TEMPERATURE);
+      if (Number.isFinite(parsed)) {
+        config.temperature = parsed;
+      }
+    }
+    if (process.env.GEMINI_MAX_OUTPUT_TOKENS) {
+      const parsed = parseInt(process.env.GEMINI_MAX_OUTPUT_TOKENS, 10);
+      if (Number.isFinite(parsed)) {
+        config.maxOutputTokens = parsed;
+      }
+    }
+    if (process.env.GEMINI_TIMEOUT_MS) {
+      const parsed = parseInt(process.env.GEMINI_TIMEOUT_MS, 10);
+      if (Number.isFinite(parsed)) {
+        config.timeoutMs = parsed;
+      }
+    }
     
     console.log('🏭 VisionService作成 (サーバーサイド):', {
-      useRealAPI,
+      useGemini,
       hasAPIKey: !!apiKey,
       apiKeyLength: apiKey?.length || 0,
+      model: config.model || process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite-preview-02-05',
       env: process.env.NODE_ENV
     });
     
-    if (useRealAPI && apiKey) {
-      console.log('✅ ReplicateVisionService を使用');
-      return new ReplicateVisionService(apiKey);
+    if (useGemini && apiKey) {
+      console.log('✅ GeminiVisionService を使用');
+      return new GeminiVisionService(apiKey, config);
     }
   }
   

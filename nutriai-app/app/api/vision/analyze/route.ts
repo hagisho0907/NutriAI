@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createStorageService } from '@/lib/services/storage';
 import { createVisionService, MockVisionService } from '@/lib/services/vision';
 import { classifyError, AppError } from '@/lib/utils/errorHandling';
 import type { ProcessedImage } from '@/lib/utils/imageProcessing';
 
-// Use Node.js runtime for Replicate API calls
+// Use Node.js runtime for external Gemini API calls
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
@@ -44,8 +43,10 @@ export async function POST(request: NextRequest) {
 
     console.log('🏭 VisionService作成中...');
     console.log('🔑 環境変数チェック:', {
-      ENABLE_REAL_AI: process.env.NEXT_PUBLIC_ENABLE_REAL_AI_ANALYSIS,
-      HAS_API_KEY: !!process.env.REPLICATE_API_KEY, // サーバーサイド環境変数
+      ENABLE_GEMINI: process.env.NEXT_PUBLIC_ENABLE_GEMINI,
+      HAS_GEMINI_KEY: !!process.env.GOOGLE_AI_API_KEY,
+      GEMINI_MODEL: process.env.GEMINI_MODEL,
+      GEMINI_TEMPERATURE: process.env.GEMINI_TEMPERATURE,
       NODE_ENV: process.env.NODE_ENV
     });
     
@@ -72,24 +73,40 @@ export async function POST(request: NextRequest) {
     
     // Analyze the image
     const analysisResult = await visionService.analyzeFood(processedImage, description);
-    console.log('✅ 画像解析完了:', analysisResult);
+    console.log('✅ 画像解析完了:', {
+      provider: analysisResult.provider,
+      fallback: analysisResult.fallback,
+      items: analysisResult.items.length,
+      totalCalories: analysisResult.totalCalories,
+      confidence: analysisResult.overallConfidence
+    });
+
+    const { rawResponse, ...publicResult } = analysisResult;
 
     // In production, you would also:
     // 1. Upload to Supabase Storage
-    // 2. Call Replicate API via Edge Function
+    // 2. Call Gemini API via Edge Function
     // 3. Store results in database
 
     return NextResponse.json({
       success: true,
-      data: analysisResult
+      data: publicResult,
+      meta: {
+        provider: analysisResult.provider,
+        fallback: analysisResult.fallback
+      }
     });
 
   } catch (error) {
     const appError: AppError = classifyError(error);
-    const clientMessage =
-      appError.statusCode === 402
-        ? 'AIビジョン分析のクレジットが不足しています。数分後に再試行するか、管理者に連絡してください。'
-        : appError.message;
+    let clientMessage = appError.message;
+    if (appError.statusCode === 401) {
+      clientMessage = 'Gemini APIキーが無効か設定されていません。管理者に連絡してください。';
+    } else if (appError.statusCode === 429) {
+      clientMessage = 'Gemini APIの利用上限に達しました。時間をおいて再試行するか手動入力をご利用ください。';
+    } else if (appError.statusCode === 503 || appError.statusCode === 504) {
+      clientMessage = 'Gemini APIが混雑しています。少し時間をおいてから再試行してください。';
+    }
     console.error('❌ Vision API エラー:', appError);
     console.error('エラー詳細:', {
       name: appError.name,
@@ -100,24 +117,31 @@ export async function POST(request: NextRequest) {
       stack: appError.stack
     });
 
-    if (
+    const shouldFallback =
       processedImage &&
       appError.code === 'API_ERROR' &&
-      appError.statusCode === 402
-    ) {
-      console.warn('⚠️ Replicate APIのクレジット不足。モック分析にフォールバックします。');
+      [401, 429, 503, 504].includes(appError.statusCode);
+
+    if (shouldFallback) {
+      console.warn('⚠️ Gemini APIのエラー。モック分析にフォールバックします。', {
+        status: appError.statusCode,
+        retryable: appError.retryable
+      });
       
       try {
         const fallbackService = new MockVisionService();
         const fallbackResult = await fallbackService.analyzeFood(processedImage, description);
+        const { rawResponse, ...publicFallback } = fallbackResult;
         
         return NextResponse.json(
           {
             success: true,
-            data: fallbackResult,
+            data: publicFallback,
             meta: {
+              provider: fallbackResult.provider,
               fallback: true,
-              reason: 'replicate_insufficient_credit'
+              reason: 'gemini_error',
+              originalStatus: appError.statusCode,
             }
           },
           { status: 200 }
