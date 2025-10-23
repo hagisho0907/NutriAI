@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
       [401, 429, 503, 504].includes(appError.statusCode);
 
     if (canFallback) {
-      const fallbackImage = processedImage;
+      const fallbackImage: ProcessedImage = processedImage;
       console.warn('⚠️ Gemini APIのエラー。モック分析にフォールバックします。', {
         status: appError.statusCode,
         retryable: appError.retryable
