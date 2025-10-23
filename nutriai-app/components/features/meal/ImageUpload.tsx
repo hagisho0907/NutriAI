@@ -47,16 +47,18 @@ export function ImageUpload({
   }, [onImageSelect]);
 
   const startCamera = useCallback(async () => {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      toast.error('お使いの環境ではカメラが利用できません');
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' }
       });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        setIsCapturing(true);
-      }
+
+      streamRef.current = stream;
+      setIsCapturing(true);
     } catch (error) {
       toast.error('カメラの起動に失敗しました');
     }
@@ -66,6 +68,9 @@ export function ImageUpload({
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
     }
     setIsCapturing(false);
   }, []);
@@ -102,6 +107,17 @@ export function ImageUpload({
   }, [onImageSelect, stopCamera]);
 
   React.useEffect(() => {
+    if (isCapturing && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current
+        .play()
+        .catch(() => {
+          // Safari iOS requires user interaction even though we are already inside one.
+        });
+    }
+  }, [isCapturing]);
+
+  React.useEffect(() => {
     return () => {
       stopCamera();
     };
@@ -114,6 +130,7 @@ export function ImageUpload({
           <video
             ref={videoRef}
             autoPlay
+            muted
             playsInline
             className="w-full h-full object-cover"
           />
