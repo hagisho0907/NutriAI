@@ -167,7 +167,7 @@ export class StoreCache<T> {
   private evict(): void {
     if (this.cache.size === 0) return;
 
-    let keyToEvict: string;
+    let keyToEvict = '';
     
     if (this.options.strategy === 'LRU') {
       // Find least recently used
@@ -182,7 +182,10 @@ export class StoreCache<T> {
       }
     } else {
       // FIFO - remove first entry
-      keyToEvict = this.cache.keys().next().value;
+      const iterator = this.cache.keys().next();
+      if (!iterator.done && typeof iterator.value === 'string') {
+        keyToEvict = iterator.value;
+      }
     }
 
     if (keyToEvict) {

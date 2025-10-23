@@ -2,7 +2,7 @@
 import { http, HttpResponse } from 'msw'
 import { delay, MOCK_DELAY } from '../../api/config'
 import { mockExercises, mockExerciseTemplates } from '../../mockData'
-import type { ExerciseLog, ExerciseTemplate } from '../../../types'
+import type { ExerciseLog, ExerciseTemplate } from '../../../types/exercise'
 
 // Mock exercises database
 const mockExerciseLogsDatabase = new Map<string, ExerciseLog>()

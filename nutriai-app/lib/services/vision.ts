@@ -195,7 +195,7 @@ export class ReplicateVisionService implements VisionService {
     throw new VisionAnalysisError('Analysis timeout');
   }
 
-  private parseAnalysisResult(output: string, description?: string): VisionAnalysisResult {
+  private async parseAnalysisResult(output: string, description?: string): Promise<VisionAnalysisResult> {
     // Parse AI output and structure response
     // This is a simplified implementation
     const mockService = new MockVisionService();

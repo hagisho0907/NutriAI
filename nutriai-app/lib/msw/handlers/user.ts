@@ -2,7 +2,7 @@
 import { http, HttpResponse } from 'msw'
 import { delay, MOCK_DELAY } from '../../api/config'
 import { mockUser, mockGoal } from '../../mockData'
-import type { UserProfile, UserGoal } from '../../../types'
+import type { UserProfile, UserGoal } from '../../../types/user'
 
 // Mock user profiles database
 const mockProfilesDatabase = new Map<string, UserProfile>()

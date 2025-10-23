@@ -10,7 +10,7 @@ import {
 } from '../../api/services/exercises'
 import { queryKeys, getRelatedQueryKeys } from '../query-keys'
 import { STALE_TIME, CACHE_TIME } from '../config'
-import type { ExerciseLog, ExerciseTemplate } from '../../../types'
+import type { ExerciseLog, ExerciseTemplate } from '../../../types/exercise'
 import type { PaginatedResponse } from '../../../types/api'
 
 // Exercise query hooks

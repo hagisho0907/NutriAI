@@ -8,7 +8,7 @@ import {
 } from '../../api/services/foods'
 import { queryKeys } from '../query-keys'
 import { STALE_TIME, CACHE_TIME } from '../config'
-import type { Food, CustomFood } from '../../../types'
+import type { Food, CustomFood } from '../../../types/food'
 import type { PaginatedResponse } from '../../../types/api'
 
 // Foods query hooks

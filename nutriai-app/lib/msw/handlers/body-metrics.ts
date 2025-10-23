@@ -2,7 +2,7 @@
 import { http, HttpResponse } from 'msw'
 import { delay, MOCK_DELAY } from '../../api/config'
 import { mockBodyMetrics } from '../../mockData'
-import type { BodyMetrics } from '../../../types'
+import type { BodyMetrics } from '../../../types/body-metrics'
 
 // Mock body metrics database
 const mockBodyMetricsDatabase = new Map<string, BodyMetrics>()

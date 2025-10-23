@@ -9,7 +9,7 @@ import { Badge } from '../../ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../ui/dialog';
 import { Label } from '../../ui/label';
 import { mockFoods } from '../../../lib/mockData';
-import type { Food } from '../../../types';
+import type { Food } from '../../../types/food';
 
 interface BarcodeSearchPageProps {
   onClose?: () => void;

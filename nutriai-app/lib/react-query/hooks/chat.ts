@@ -9,7 +9,7 @@ import {
 } from '../../api/services/chat'
 import { queryKeys } from '../query-keys'
 import { STALE_TIME, CACHE_TIME } from '../config'
-import type { ChatMessage, ChatSuggestion } from '../../../types'
+import type { ChatMessage, ChatSuggestion } from '../../../types/chat'
 import type { PaginatedResponse } from '../../../types/api'
 
 // Chat query hooks

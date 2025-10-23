@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from '@tansta
 import { mealsService, type MealLogParams, type CreateMealRequest, type CreateMealTemplateRequest, type UseMealTemplateRequest } from '../../api/services/meals'
 import { queryKeys, getRelatedQueryKeys } from '../query-keys'
 import { STALE_TIME, CACHE_TIME } from '../config'
-import type { Meal, MealTemplate } from '../../../types'
+import type { Meal, MealTemplate } from '../../../types/meal'
 import type { PaginatedResponse } from '../../../types/api'
 
 // Meal query hooks

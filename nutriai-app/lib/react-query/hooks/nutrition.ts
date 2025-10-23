@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from '@tansta
 import { nutritionService } from '../../api/services/nutrition'
 import { queryKeys, getRelatedQueryKeys } from '../query-keys'
 import { STALE_TIME, CACHE_TIME } from '../config'
-import type { NutritionGoals, DailyNutrition, NutrientBalance } from '../../../types'
+import type { NutritionGoals, DailyNutrition, NutrientBalance } from '../../../types/nutrition'
 import type { PaginatedResponse } from '../../../types/api'
 
 // Nutrition query hooks

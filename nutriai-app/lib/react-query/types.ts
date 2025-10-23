@@ -3,19 +3,12 @@
 
 import type { UseQueryResult, UseMutationResult, UseInfiniteQueryResult } from '@tanstack/react-query'
 import type { UserWithProfile } from '../../types/user'
-import type {
-  NutritionGoals,
-  DailyNutrition,
-  Meal,
-  MealTemplate,
-  ExerciseLog,
-  ExerciseTemplate,
-  BodyMetrics,
-  ChatMessage,
-  ChatSuggestion,
-  Food,
-  CustomFood,
-} from '../../types'
+import type { NutritionGoals, DailyNutrition } from '../../types/nutrition'
+import type { Meal, MealTemplate } from '../../types/meal'
+import type { ExerciseLog, ExerciseTemplate } from '../../types/exercise'
+import type { BodyMetrics } from '../../types/body-metrics'
+import type { ChatMessage, ChatSuggestion } from '../../types/chat'
+import type { Food, CustomFood } from '../../types/food'
 import type {
   PaginatedResponse,
   GuestLoginResponse,

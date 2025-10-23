@@ -113,7 +113,7 @@ export const apiHandlers = [
   // Meal endpoints
   http.post('/api/meals', async ({ request }) => {
     await delay(500);
-    const meal = await request.json();
+    const meal = await request.json() as Record<string, unknown>;
     return HttpResponse.json({
       id: `meal-${Date.now()}`,
       ...meal,

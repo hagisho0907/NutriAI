@@ -22,7 +22,8 @@ export const AuthExample: React.FC = () => {
     e.preventDefault();
     try {
       await login(email, password);
-      showSuccess('Login Successful', `Welcome back, ${user?.name}!`);
+      const displayName = user?.profile?.displayName ?? user?.email ?? '';
+      showSuccess('Login Successful', `Welcome back, ${displayName}!`);
     } catch (error) {
       showError('Login Failed', 'Please check your credentials and try again.');
     }
@@ -31,7 +32,7 @@ export const AuthExample: React.FC = () => {
   if (isAuthenticated) {
     return (
       <div className="p-4">
-        <h2>Welcome, {user?.name}!</h2>
+        <h2>Welcome, {user?.profile?.displayName ?? user?.email ?? 'Guest'}!</h2>
         <button onClick={logout} className="bg-red-500 text-white px-4 py-2 rounded">
           Logout
         </button>

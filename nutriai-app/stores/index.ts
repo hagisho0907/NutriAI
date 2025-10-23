@@ -95,14 +95,29 @@ export const useStoreActions = () => {
       
       // Update daily nutrition
       const totalNutrients = mealStore.calculateMealNutrients(meal.foods);
+      const previousNutrients = nutritionStore.currentDateNutrition?.totalNutrients ?? {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+        fiber: 0,
+        sugar: 0,
+        sodium: 0,
+        saturatedFat: 0,
+        cholesterol: 0,
+      };
       nutritionStore.updateDailyNutrition({
         totalNutrients: {
-          ...nutritionStore.currentDateNutrition?.totalNutrients,
-          calories: (nutritionStore.currentDateNutrition?.totalNutrients.calories || 0) + totalNutrients.calories,
-          protein: (nutritionStore.currentDateNutrition?.totalNutrients.protein || 0) + totalNutrients.protein,
-          carbs: (nutritionStore.currentDateNutrition?.totalNutrients.carbs || 0) + totalNutrients.carbs,
-          fat: (nutritionStore.currentDateNutrition?.totalNutrients.fat || 0) + totalNutrients.fat
-        }
+          calories: previousNutrients.calories + (totalNutrients.calories ?? 0),
+          protein: previousNutrients.protein + (totalNutrients.protein ?? 0),
+          carbs: previousNutrients.carbs + (totalNutrients.carbs ?? 0),
+          fat: previousNutrients.fat + (totalNutrients.fat ?? 0),
+          fiber: previousNutrients.fiber + (totalNutrients.fiber ?? 0),
+          sugar: previousNutrients.sugar + (totalNutrients.sugar ?? 0),
+          sodium: previousNutrients.sodium + (totalNutrients.sodium ?? 0),
+          saturatedFat: previousNutrients.saturatedFat,
+          cholesterol: previousNutrients.cholesterol,
+        },
       });
 
       uiStore.showSuccess('Meal Logged', 'Your meal has been successfully logged and nutrition updated.');
@@ -121,11 +136,22 @@ export const useStoreActions = () => {
       await exerciseStore.endSession(session.id);
       
       // Update nutrition with burned calories (negative calories)
+      const previousNutrients = nutritionStore.currentDateNutrition?.totalNutrients ?? {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+        fiber: 0,
+        sugar: 0,
+        sodium: 0,
+        saturatedFat: 0,
+        cholesterol: 0,
+      };
       nutritionStore.updateDailyNutrition({
         totalNutrients: {
-          ...nutritionStore.currentDateNutrition?.totalNutrients,
-          calories: (nutritionStore.currentDateNutrition?.totalNutrients.calories || 0) - caloriesBurned
-        }
+          ...previousNutrients,
+          calories: previousNutrients.calories - caloriesBurned,
+        },
       });
 
       uiStore.showSuccess('Workout Complete', `Great job! You burned ${caloriesBurned} calories.`);
@@ -197,7 +223,7 @@ export const useStoreSelectors = () => {
   // Computed values
   const dashboardData = {
     isAuthenticated: authStore.isAuthenticated,
-    userName: authStore.user?.name || 'User',
+    userName: authStore.user?.profile?.displayName || authStore.user?.email || 'User',
     todaysCalories: nutritionStore.currentDateNutrition?.totalNutrients.calories || 0,
     calorieGoal: nutritionStore.nutritionGoals?.dailyTargets.calories || 2000,
     todaysMeals: mealStore.todaysMeals.length,

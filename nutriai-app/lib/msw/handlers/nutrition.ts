@@ -2,7 +2,7 @@
 import { http, HttpResponse } from 'msw'
 import { delay, MOCK_DELAY } from '../../api/config'
 import { mockDailySummary } from '../../mockData'
-import type { NutritionGoals, DailyNutrition, NutrientBalance } from '../../../types'
+import type { NutritionGoals, DailyNutrition, NutrientBalance } from '../../../types/nutrition'
 
 // Mock nutrition database
 const mockNutritionGoalsDatabase = new Map<string, NutritionGoals>()

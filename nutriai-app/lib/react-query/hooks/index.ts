@@ -158,7 +158,7 @@ export type {
   // Nutrition types
   NutritionGoals,
   DailyNutrition,
-} from '../../../types'
+} from '../../../types/nutrition'
 
 export type {
   // Meals types

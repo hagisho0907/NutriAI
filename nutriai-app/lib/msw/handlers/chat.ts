@@ -2,7 +2,7 @@
 import { http, HttpResponse } from 'msw'
 import { delay, MOCK_DELAY } from '../../api/config'
 import { mockChatMessages } from '../../mockData'
-import type { ChatMessage, ChatSuggestion } from '../../../types'
+import type { ChatMessage, ChatSuggestion } from '../../../types/chat'
 
 // Mock chat database
 const mockChatMessagesDatabase = new Map<string, ChatMessage>()

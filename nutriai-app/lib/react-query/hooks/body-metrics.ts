@@ -8,7 +8,7 @@ import {
 } from '../../api/services/body-metrics'
 import { queryKeys, getRelatedQueryKeys } from '../query-keys'
 import { STALE_TIME, CACHE_TIME } from '../config'
-import type { BodyMetrics } from '../../../types'
+import type { BodyMetrics } from '../../../types/body-metrics'
 import type { PaginatedResponse } from '../../../types/api'
 
 // Body Metrics query hooks

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { User, UserWithProfile, UserProfile, CreateUserGoalRequest } from '../../nutriai-app/types';
+import { User, UserWithProfile, UserProfile, CreateUserGoalRequest } from '../types/user';
 
 interface AuthStore {
   // State

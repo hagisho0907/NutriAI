@@ -2,7 +2,8 @@
 import { http, HttpResponse } from 'msw'
 import { delay, MOCK_DELAY } from '../../api/config'
 import { mockMeals, mockCustomMeals } from '../../mockData'
-import type { Meal, MealTemplate, MealItem } from '../../../types'
+import type { Meal, MealTemplate } from '../../../types/meal'
+import type { MealItem } from '../../../types/food'
 
 // Mock meals database
 const mockMealsDatabase = new Map<string, Meal>()
