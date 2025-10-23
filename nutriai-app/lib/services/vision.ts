@@ -160,6 +160,18 @@ export class ReplicateVisionService implements VisionService {
   }
 
   private async imageToBase64(image: ProcessedImage): Promise<string> {
+    // If dataUrl is already provided, use it
+    if (image.dataUrl) {
+      return image.dataUrl;
+    }
+    
+    // For server-side, we need to handle File differently
+    if (typeof window === 'undefined') {
+      // This should not happen as we convert in API route
+      throw new Error('Cannot convert File to base64 on server-side without dataUrl');
+    }
+    
+    // Client-side FileReader (not used in current flow)
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
@@ -212,22 +224,23 @@ export class ReplicateVisionService implements VisionService {
 
   private async parseAnalysisResult(output: string, description?: string): Promise<VisionAnalysisResult> {
     try {
-      // Try to parse as JSON first
-      let items: FoodItem[] = [];
+      console.log('🔍 解析結果をパース中:', output);
       
-      try {
-        const parsed = JSON.parse(output);
-        if (Array.isArray(parsed)) {
-          items = parsed.map(item => this.normalizeFoodItem(item));
-        }
-      } catch {
-        // If not JSON, parse natural language response
-        items = this.parseNaturalLanguageResponse(output);
-      }
+      // BLIP-2 returns natural language, so parse it
+      const items = this.parseNaturalLanguageResponse(output);
       
-      // If no items found, use description to create basic estimation
-      if (items.length === 0 && description) {
-        items = this.createEstimationFromDescription(description);
+      // If no items found, create basic estimation
+      if (items.length === 0) {
+        items = [{
+          name: description || 'Food item',
+          quantity: 100,
+          unit: 'g',
+          calories: 200,
+          protein: 10,
+          fat: 8,
+          carbs: 25,
+          confidence: 0.5
+        }];
       }
       
       // Calculate totals
@@ -243,7 +256,7 @@ export class ReplicateVisionService implements VisionService {
       
       const overallConfidence = items.length > 0
         ? items.reduce((sum, item) => sum + item.confidence, 0) / items.length
-        : 0.5;
+        : 0.7;
       
       return {
         items,
@@ -257,10 +270,27 @@ export class ReplicateVisionService implements VisionService {
       };
       
     } catch (error) {
-      console.error('Failed to parse analysis result:', error);
-      // Fallback to mock service
-      const mockService = new MockVisionService();
-      return mockService.analyzeFood({ file: new File([], ''), dataUrl: '', width: 0, height: 0, size: 0 }, description);
+      console.error('解析結果のパースエラー:', error);
+      // Return basic estimation
+      return {
+        items: [{
+          name: 'Food item',
+          quantity: 100,
+          unit: 'g',
+          calories: 200,
+          protein: 10,
+          fat: 8,
+          carbs: 25,
+          confidence: 0.5
+        }],
+        totalCalories: 200,
+        totalProtein: 10,
+        totalFat: 8,
+        totalCarbs: 25,
+        overallConfidence: 0.5,
+        analysisId: `error-${Date.now()}`,
+        processedAt: new Date()
+      };
     }
   }
   
