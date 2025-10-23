@@ -1,22 +1,13 @@
 // Mock data service for NutriAI
-import type {
-  UserProfile,
-  UserGoal,
-  User,
-  BodyMetrics,
-  DailyTask,
-  Meal,
-  MealItem,
-  MealTemplate,
-  ExerciseLog,
-  ExerciseTemplate,
-  ChatMessage,
-  ChatRole,
-  Food,
-  CustomFood,
-  DailyNutrition,
-  PFCBalance,
-} from '../types';
+import type { User, UserProfile, UserGoal } from '../types/user';
+import type { DailyTask } from '../types/common';
+import type { BodyMetrics } from '../types/body-metrics';
+import type { Meal, MealTemplate } from '../types/meal';
+import type { MealItem } from '../types/food';
+import type { ExerciseLog, ExerciseTemplate } from '../types/exercise';
+import type { ChatMessage, ChatRole } from '../types/chat';
+import type { Food, CustomFood } from '../types/food';
+import type { DailyNutrition, PFCBalance } from '../types/nutrition';
 
 // Re-export types that are commonly used
 export type { Food, CustomFood, ChatMessage, ChatRole };
