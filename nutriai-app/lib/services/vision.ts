@@ -122,11 +122,17 @@ export class GeminiVisionService implements VisionService {
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
       try {
-        const model = this.config.model || process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite-preview-02-05';
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${this.apiKey}`;
+        const rawModel =
+          this.config.model || process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite-preview-02-05';
+        const normalizedModel = rawModel.startsWith('models/')
+          ? rawModel.slice('models/'.length)
+          : rawModel;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+          normalizedModel
+        )}:generateContent?key=${this.apiKey}`;
 
         console.log('🚀 GeminiVisionService: 分析開始');
-        console.log('🧠 モデル:', model);
+        console.log('🧠 モデル:', normalizedModel);
 
         const response = await fetch(url, {
           method: 'POST',
