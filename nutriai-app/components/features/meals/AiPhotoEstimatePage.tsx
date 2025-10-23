@@ -10,7 +10,8 @@ import { Camera, Upload, Sparkles, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUpload } from '@/components/features/meal/ImageUpload';
 import { ProcessedImage } from '@/lib/utils/imageProcessing';
-import { createVisionService, VisionAnalysisResult } from '@/lib/services/vision';
+import { createClientVisionService } from '@/lib/services/vision-client';
+import { VisionAnalysisResult } from '@/lib/services/vision';
 
 interface AiPhotoEstimatePageProps {
   onBack: () => void;
@@ -37,7 +38,7 @@ export function AiPhotoEstimatePage({
   const [macros, setMacros] = useState({ protein: 0, fat: 0, carb: 0 });
   const [isEstimating, setIsEstimating] = useState(false);
   
-  const visionService = createVisionService();
+  const visionService = createClientVisionService();
 
   const handleImageSelect = (image: ProcessedImage) => {
     setSelectedImage(image);

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createStorageService } from '@/lib/services/storage';
 import { createVisionService } from '@/lib/services/vision';
 
-export const runtime = 'edge';
+// Use Node.js runtime for Replicate API calls
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {

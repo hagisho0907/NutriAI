@@ -100,10 +100,15 @@ export class ReplicateVisionService implements VisionService {
   async analyzeFood(image: ProcessedImage, description?: string): Promise<VisionAnalysisResult> {
     return retryVisionAnalysis(async () => {
       try {
+        console.log('🚀 ReplicateVisionService: 分析開始');
+        console.log('🔑 APIキー長:', this.apiKey?.length || 0);
+        
         // Convert image to base64 for API call
         const base64Image = await this.imageToBase64(image);
+        console.log('📷 Base64変換完了:', base64Image.substring(0, 50) + '...');
         
         // Call Replicate API
+        console.log('📡 Replicate API呼び出し中...');
         const response = await fetch('https://api.replicate.com/v1/predictions', {
           method: 'POST',
           headers: {
@@ -128,6 +133,7 @@ export class ReplicateVisionService implements VisionService {
         }
 
         const prediction = await response.json();
+        console.log('📋 予測作成レスポンス:', prediction);
         
         // Poll for results
         const result = await this.pollForResult(prediction.urls.get);
@@ -320,10 +326,19 @@ export function createVisionService(): VisionService {
   const useRealAPI = process.env.NEXT_PUBLIC_ENABLE_REAL_AI_ANALYSIS === 'true';
   const apiKey = process.env.NEXT_PUBLIC_REPLICATE_API_KEY;
   
+  console.log('🏭 VisionService作成:', {
+    useRealAPI,
+    hasAPIKey: !!apiKey,
+    apiKeyLength: apiKey?.length || 0,
+    env: process.env.NODE_ENV
+  });
+  
   if (useRealAPI && apiKey) {
+    console.log('✅ ReplicateVisionService を使用');
     return new ReplicateVisionService(apiKey);
   }
   
   // Default to mock service for development
+  console.log('🎭 MockVisionService を使用');
   return new MockVisionService();
 }
