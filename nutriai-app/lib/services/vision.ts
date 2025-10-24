@@ -165,7 +165,7 @@ export class GeminiVisionService implements VisionService {
         }
 
         const data = await response.json();
-        console.log('📋 Geminiレスポンス受信');
+        console.log('📋 Geminiレスポンス受信', data);
 
         const parsedResult = this.parseResponse(data, description);
         return await enrichVisionResultWithDatabase(parsedResult);
@@ -201,25 +201,25 @@ export class GeminiVisionService implements VisionService {
     const sanitizedDescription = (description || '').trim().substring(0, 500);
 
     const instruction = [
-      'You are a Japanese nutrition assistant. Analyze the meal photo and provide estimates.',
-      'Respond ONLY with valid JSON matching this schema:',
+      'あなたは日本語で回答する栄養アシスタントです。写真に写っている食事を解析し、可能な限り実際の重量（g）を推定してください。',
+      '必ず以下のJSONスキーマに沿って出力し、食品名・説明は日本語で記載してください。',
       '{',
       '  "items": [',
       '    {',
-      '      "name": "string (food item name)",',
-      '      "quantity": number (amount in grams),',
-      '      "unit": "string (unit, default g)",',
+      '      "name": "string (食品名: 日本語)",',
+      '      "quantity": number (推定量: g単位)',
+      '      "unit": "string (単位。基本は\"g\")",',
       '      "calories": number (kcal),',
-      '      "protein": number (grams),',
-      '      "fat": number (grams),',
-      '      "carbs": number (grams),',
+      '      "protein": number (g),',
+      '      "fat": number (g),',
+      '      "carbs": number (g),',
       '      "confidence": number (0-1)',
       '    }',
       '  ],',
       '  "notes": "optional short string"',
       '}',
-      'Identify up to 3 prominent food items. If unsure about a value, provide your best estimate.',
-      'Do not include any text outside the JSON object.'
+      '食品は最大3件まで。重量(g)が不明な場合でも最も可能性が高い値を推定して記入してください。',
+      'JSONオブジェクト以外のテキストは出力しないでください。'
     ].join('\n');
 
     const userContext = sanitizedDescription

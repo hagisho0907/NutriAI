@@ -164,34 +164,86 @@ async function querySupabase(term: string): Promise<JfctFoodRow | null> {
   if (!supabaseRestEndpoint) return null;
 
   const encodedTerm = encodeURIComponent(term);
-  const url = `${supabaseRestEndpoint}?select=food_code,name_ja,energy_kcal,protein_g,fat_g,carbs_g,index_number&name_ja=ilike.*${encodedTerm}*&order=index_number.asc&limit=5`;
+  const columnCandidates = ['name_ja', '食品名', '名称'];
 
-  try {
-    const response = await fetch(url, {
-      headers: {
-        apikey: supabaseServiceRoleKey,
-        Authorization: `Bearer ${supabaseServiceRoleKey}`,
-      },
-    });
+  for (const column of columnCandidates) {
+    const filterParam = `${encodeURIComponent(column)}=ilike.*${encodedTerm}*`;
+    const url = `${supabaseRestEndpoint}?select=*&${filterParam}&limit=5`;
 
-    if (!response.ok) {
-      console.error('🥗 栄養突合: Supabase呼び出し失敗', {
-        term,
-        status: response.status,
-        body: await response.text()
+    try {
+      const response = await fetch(url, {
+        headers: {
+          apikey: supabaseServiceRoleKey,
+          Authorization: `Bearer ${supabaseServiceRoleKey}`,
+        },
       });
-      return null;
-    }
 
-    const data = (await response.json()) as JfctFoodRow[];
-    if (!Array.isArray(data) || data.length === 0) {
-      console.log('🥗 栄養突合: Supabaseヒットなし', { term });
-      return null;
-    }
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.warn('🥗 栄養突合: Supabase呼び出し失敗', {
+          term,
+          column,
+          status: response.status,
+          body: errorText
+        });
+        continue;
+      }
 
-    return data[0];
-  } catch (error) {
-    console.error('🥗 栄養突合: Supabase通信エラー', { term, error });
+      const rawData = await response.json();
+      if (!Array.isArray(rawData) || rawData.length === 0) {
+        console.log('🥗 栄養突合: Supabaseヒットなし', { term, column });
+        continue;
+      }
+
+      const mapped = mapRowToNutrition(rawData[0]);
+      if (mapped) {
+        return mapped;
+      }
+    } catch (error) {
+      console.error('🥗 栄養突合: Supabase通信エラー', { term, column, error });
+    }
+  }
+
+  return null;
+}
+
+function mapRowToNutrition(row: Record<string, any>): JfctFoodRow | null {
+  const getByKeys = (keys: string[]): any => {
+    for (const key of keys) {
+      if (key in row) {
+        return row[key];
+      }
+      const lowerKey = key.toLowerCase();
+      const found = Object.keys(row).find(
+        (k) => k.toLowerCase() === lowerKey
+      );
+      if (found) {
+        return row[found];
+      }
+    }
+    return null;
+  };
+
+  const foodCode = getByKeys(['food_code', '食品番号', '食品コード']);
+  const nameJa = getByKeys(['name_ja', '食品名', '名称']);
+  const energy = getByKeys(['energy_kcal', 'エネルギー（kcal）', 'エネルギー(kcal)', 'エネルギー']);
+  const protein = getByKeys(['protein_g', 'タンパク質', 'たんぱく質', 'たん白質']);
+  const fat = getByKeys(['fat_g', '脂質']);
+  const carbs = getByKeys(['carbs_g', '炭水化物']);
+
+  if (!foodCode || !nameJa) {
+    console.warn('🥗 栄養突合: 取得データをマッピングできませんでした', {
+      availableKeys: Object.keys(row)
+    });
     return null;
   }
+
+  return {
+    food_code: String(foodCode),
+    name_ja: String(nameJa),
+    energy_kcal: energy != null ? Number(energy) : null,
+    protein_g: protein != null ? Number(protein) : null,
+    fat_g: fat != null ? Number(fat) : null,
+    carbs_g: carbs != null ? Number(carbs) : null,
+  };
 }
