@@ -1,6 +1,7 @@
 import { ProcessedImage } from '../utils/imageProcessing';
 import { VisionAnalysisError, APIError } from '../utils/errorHandling';
 import { retryVisionAnalysis } from '../utils/retry';
+import { enrichVisionResultWithDatabase } from './nutrition-database';
 
 export interface FoodItem {
   name: string;
@@ -11,6 +12,9 @@ export interface FoodItem {
   fat: number;
   carbs: number;
   confidence: number;
+  source?: 'gemini' | 'jfct' | 'usda' | 'mock';
+  foodCode?: string;
+  matchedName?: string;
 }
 
 export interface VisionAnalysisResult {
@@ -66,7 +70,8 @@ export class MockVisionService implements VisionService {
         protein: Math.round(protein * 10) / 10,
         fat: Math.round(fat * 10) / 10,
         carbs: Math.round(carbs * 10) / 10,
-        confidence: Math.round((0.7 + Math.random() * 0.25) * 100) / 100
+        confidence: Math.round((0.7 + Math.random() * 0.25) * 100) / 100,
+        source: 'mock'
       };
     });
     
@@ -162,7 +167,8 @@ export class GeminiVisionService implements VisionService {
         const data = await response.json();
         console.log('📋 Geminiレスポンス受信');
 
-        return this.parseResponse(data, description);
+        const parsedResult = this.parseResponse(data, description);
+        return await enrichVisionResultWithDatabase(parsedResult);
       } catch (error) {
         if (error instanceof APIError) {
           throw error;
@@ -505,7 +511,7 @@ export class GeminiVisionService implements VisionService {
       confidence = 0.6;
     }
 
-    return {
+   return {
       name: String(name),
       quantity,
       unit,
@@ -513,7 +519,8 @@ export class GeminiVisionService implements VisionService {
       protein: Math.max(0, Math.round(protein * 10) / 10),
       fat: Math.max(0, Math.round(fat * 10) / 10),
       carbs: Math.max(0, Math.round(carbs * 10) / 10),
-      confidence: Math.min(1, Math.max(0, Math.round(confidence * 100) / 100))
+      confidence: Math.min(1, Math.max(0, Math.round(confidence * 100) / 100)),
+      source: 'gemini'
     };
   }
 
@@ -557,7 +564,8 @@ export class GeminiVisionService implements VisionService {
       protein: Math.round((calories * 0.2 / 4) * 10) / 10,
       fat: Math.round((calories * 0.3 / 9) * 10) / 10,
       carbs: Math.round((calories * 0.5 / 4) * 10) / 10,
-      confidence: 0.5
+      confidence: 0.5,
+      source: 'gemini'
     };
   }
 
@@ -576,7 +584,8 @@ export class GeminiVisionService implements VisionService {
           protein: Math.round((calories * 0.2 / 4) * 10) / 10,
           fat: Math.round((calories * 0.3 / 9) * 10) / 10,
           carbs: Math.round((calories * 0.5 / 4) * 10) / 10,
-          confidence: 0.55
+          confidence: 0.55,
+          source: 'gemini'
         };
       });
   }
