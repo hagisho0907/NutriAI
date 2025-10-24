@@ -10,7 +10,7 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | F-01 | 初期設定 & AI目標提案 | ユーザーの基本情報から現実的な目標をAIが提示し定着行動を開始 | SCR-02 | users, user_profiles, user_goals, ai_inferences | `POST /ai/goals/proposal`, `POST /goals` | モック期はローカルJSONでAI提案を生成 |
 | F-02 | ダッシュボードサマリー | 当日の摂取・消費カロリーやタスクを一覧し次の行動へ誘導 | SCR-03 | daily_summaries, body_metrics | `GET /dashboard/today` | モックはスタブJSONを周期的に更新 |
-| F-03 | 食事記録(写真AI推定) | 写真+補足からマクロ栄養素を推定し登録負担を最小化 | SCR-04 | meals, meal_items, foods, ai_inferences | `POST /ai/meals/estimate`(Gemini 2.5 Flash-Lite連携), `POST /meals`, `POST /meals/{id}/photo` | Gemini障害時はモック推定にフェイルオーバー |
+| F-03 | 食事記録(写真AI推定) | 写真+補足からマクロ栄養素を推定し登録負担を最小化 | SCR-04 | meals, meal_items, foods, ai_inferences | `POST /ai/meals/estimate`(Gemini 2.5 Flash-Lite連携), `POST /meals`, `POST /meals/{id}/photo` | Gemini障害時はモック推定にフェイルオーバー。栄養値はSupabaseの`jfct_foods`で補正 |
 | F-04 | JANコード検索 | バーコード/キーワードから食品を検索し栄養データを流用 | SCR-05 | foods | `GET /foods/search`, `GET /foods/barcode/{jan}` | 検索結果0件時は手動登録フォームへ |
 | F-05 | 運動記録 | 運動内容から消費カロリーを算出し日次サマリーを更新 | SCR-06 | exercise_logs, exercise_templates | `GET /exercises/templates`, `POST /exercises/logs` | MET値はテンプレートデータで管理 |
 | F-06 | 体重・体脂肪ログ | 体重推移を可視化し目標との差分をトラッキング | SCR-03, SCR-07 | body_metrics, daily_summaries | `POST /body-metrics`, `GET /analytics/progress` | モックは固定シード+日次入力差分を反映 |

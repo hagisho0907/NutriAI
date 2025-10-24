@@ -318,6 +318,7 @@ Vision推定・LLMチャット・AIレビューなどAI体験全体を設計し�
 - 評価データセットの整備と自動評価（offline eval／A/Bテスト）の設計。
 - AI関連の安全性・コンプライアンス要件（情報開示、検閲）の整理。
 - 外部AIベンダー（Google Gemini等）の契約・利用量モニタリングとコスト最適化。
+- 栄養データ基盤（Supabase上の`jfct_foods`やUSDA照会）の保守と突合ロジックの設計。
 
 ### 成果物
 - **AI Prompt Spec**：`reports/ai/YYYYMMDD_<feature>.md`。目的、プロンプト構造、例示、トーン指針。

@@ -194,14 +194,17 @@
   "fallback": false,
   "items": [
     {
-      "name": "Grilled Chicken Breast",
+      "name": "鶏むね肉（皮なし）",
       "quantity": 150,
       "unit": "g",
       "calories": 240,
       "protein_g": 36,
       "fat_g": 4,
       "carb_g": 0,
-      "confidence": 0.87
+      "confidence": 0.93,
+      "source": "jfct",
+      "foodCode": "01001",
+      "matchedName": "鶏肉 むね（皮なし）"
     }
   ],
   "totals": {
@@ -212,7 +215,8 @@
   },
   "meta": {
     "request_id": "cm-req-20251028-001",
-    "fallback": false
+    "fallback": false,
+    "nutrition_source": "jfct_foods"
   }
 }
 ```

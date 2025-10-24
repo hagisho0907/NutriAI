@@ -42,7 +42,7 @@ flowchart TD
 ## 4. インフラ構成案
 - **PWA**: Vercelでホスティング。Preview/ProductionをGitHub連携で自動デプロイし、Service Workerでオフラインキャッシュと通知基盤を整備。
 - **BFF/Edge Functions**: Supabase Edge Functions(Deno)でBFFロジックを提供し、LLM・画像推定など外部APIへの接続を集約。環境変数とFeature FlagをSupabase側で管理。
-- **DB**: Supabase Postgres(マネージドPostgreSQL)。RLSでユーザー毎アクセス制御を実施し、スキーマは`supabase/db`配下でマイグレーション管理。
+- **DB**: Supabase Postgres(マネージドPostgreSQL)。RLSでユーザー毎アクセス制御を実施し、スキーマは`supabase/db`配下でマイグレーション管理。日本食品標準成分表2020(八訂)のCSVを`jfct_foods`テーブルとして取り込み、AI推定結果の栄養補正に利用。
 - **オブジェクトストレージ**: Supabase Storage。食事写真を署名付きURL経由でアップロードし、一定期間後にクリーンアップを実施。
 - **LLM/Vision**: LLMはOpenAI GPT-4o miniとAnthropic Claude Haikuを用途別に使い分ける。画像推定はGoogle Gemini 2.5 Flash-Liteを第一候補とし、フォールバックとしてモック推定を保持。Geminiからの構造化レスポンスを解析して栄養データ補完ロジックに接続する。
 - **監視**: フロントはVercel Analytics + Sentry、Supabaseはログ・pg_stat_statementsで監視。必要に応じてLogflare/Datadog連携を検討。
