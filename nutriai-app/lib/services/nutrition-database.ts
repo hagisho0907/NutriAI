@@ -150,14 +150,50 @@ function createSearchTerms(name: string): string[] {
   const withoutBrackets = trimmed.split(/[（(]/)[0].trim();
   const noSpaces = trimmed.replace(/\s+/g, '');
 
+  const baseTerms = [trimmed, withoutBrackets, noSpaces];
+
+  const normalizedForJa = withoutBrackets
+    .replace(/[・,、()（）【】\[\]]/g, ' ')
+    .replace(/の|と|＆|&|又は|または|と/gi, ' ')
+    .split(/\s+/)
+    .map((term) => term.trim())
+    .filter((term) => term.length >= 2);
+
+  const synonymTerms = normalizedForJa.flatMap((term) => expandSynonyms(term));
+
   const terms = new Set<string>();
-  [trimmed, withoutBrackets, noSpaces].forEach((term) => {
+  [...baseTerms, ...normalizedForJa, ...synonymTerms].forEach((term) => {
     if (term && term.length > 0) {
       terms.add(term);
     }
   });
 
   return Array.from(terms);
+}
+
+function expandSynonyms(term: string): string[] {
+  const dictionary: Record<string, string[]> = {
+    'マグロ': ['まぐろ', '鮪'],
+    '刺身': ['さしみ'],
+    'ラーメン': ['らーめん', 'ramen'],
+    '豚肉': ['ぶたにく', 'ポーク', 'pork'],
+    '牛肉': ['ぎゅうにく', 'ビーフ', 'beef'],
+    '鶏肉': ['とりにく', 'チキン', 'chicken'],
+    'とうもろこし': ['コーン', 'corn'],
+    '白米': ['ご飯', 'ごはん', 'ライス', 'rice'],
+    'バター': ['butter']
+  };
+
+  const normalized = term
+    .replace(/[A-Z]/g, (s) => s.toLowerCase())
+    .replace(/[Ａ-Ｚ]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 65248))
+    .replace(/[ａ-ｚ]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 65248));
+
+  const keys = Object.keys(dictionary);
+  const matches = keys.filter((key) => key === term || key === normalized);
+
+  const expansions = matches.flatMap((key) => dictionary[key]);
+  return [term, normalized, ...expansions];
 }
 
 async function querySupabase(term: string): Promise<JfctFoodRow | null> {
