@@ -9,6 +9,9 @@ const supabaseRestEndpoint = canUseSupabase
   ? `${supabaseUrl.replace(/\/$/, '')}/rest/v1/jfct_foods`
   : null;
 
+let cachedFoods: JfctFoodRow[] | null = null;
+let cacheLoaded = false;
+
 interface JfctFoodRow {
   food_code: string;
   name_ja: string;
@@ -142,6 +145,11 @@ async function findBestMatch(name: string): Promise<JfctFoodRow | null> {
     }
   }
 
+  const cachedMatch = await searchCache(searchTerms);
+  if (cachedMatch) {
+    return cachedMatch;
+  }
+
   return null;
 }
 
@@ -241,6 +249,109 @@ async function querySupabase(term: string): Promise<JfctFoodRow | null> {
   }
 
   return null;
+}
+
+async function ensureCacheLoaded(): Promise<JfctFoodRow[] | null> {
+  if (!supabaseRestEndpoint) return null;
+  if (cacheLoaded && cachedFoods) {
+    return cachedFoods;
+  }
+
+  const url = `${supabaseRestEndpoint}?select=*&limit=5000`;
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        apikey: supabaseServiceRoleKey,
+        Authorization: `Bearer ${supabaseServiceRoleKey}`,
+      },
+    });
+
+    if (!response.ok) {
+      console.error('🥗 栄養突合: Supabase全件取得失敗', {
+        status: response.status,
+        body: await response.text()
+      });
+      cacheLoaded = true;
+      return null;
+    }
+
+    const rawData = await response.json();
+    if (!Array.isArray(rawData)) {
+      console.warn('🥗 栄養突合: Supabase全件取得レスポンスが配列ではありません');
+      cacheLoaded = true;
+      return null;
+    }
+
+    cachedFoods = rawData
+      .map((row: Record<string, any>) => mapRowToNutrition(row))
+      .filter((row): row is JfctFoodRow => row !== null);
+    cacheLoaded = true;
+
+    console.log('🥗 栄養突合: Supabase全件キャッシュ取得', {
+      count: cachedFoods.length
+    });
+
+    return cachedFoods;
+  } catch (error) {
+    console.error('🥗 栄養突合: Supabase全件取得エラー', { error });
+    cacheLoaded = true;
+    return null;
+  }
+}
+
+async function searchCache(terms: string[]): Promise<JfctFoodRow | null> {
+  const cache = await ensureCacheLoaded();
+  if (!cache || cache.length === 0) {
+    return null;
+  }
+
+  const scored = cache
+    .map((row) => ({ row, score: scoreRow(row, terms) }))
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  if (scored.length === 0) {
+    return null;
+  }
+
+  const best = scored[0];
+  console.log('🥗 栄養突合: キャッシュからマッチ', {
+    terms,
+    matchedName: best.row.name_ja,
+    score: best.score
+  });
+
+  return best.row;
+}
+
+function scoreRow(row: JfctFoodRow, terms: string[]): number {
+  const name = row.name_ja || '';
+  if (!name) return 0;
+
+  let score = 0;
+  const normalizedName = normalizeString(name);
+
+  for (const term of terms) {
+    const normalizedTerm = normalizeString(term);
+    if (!normalizedTerm) continue;
+
+    if (normalizedName.includes(normalizedTerm)) {
+      score += normalizedTerm.length;
+    }
+  }
+
+  return score;
+}
+
+function normalizeString(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[（）()\[\]【】]/g, ' ')
+    .replace(/の|と|＆|&|又は|または|と/g, ' ')
+    .replace(/[・,、]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function mapRowToNutrition(row: Record<string, any>): JfctFoodRow | null {

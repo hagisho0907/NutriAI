@@ -218,7 +218,7 @@ export class GeminiVisionService implements VisionService {
       '  ],',
       '  "notes": "optional short string"',
       '}',
-      '食品は最大3件まで。重量(g)が不明な場合でも最も可能性が高い値を推定して記入してください。',
+      '食品の数に制限はありません。重量(g)が不明な場合でも最も可能性が高い値を推定して記入してください。',
       'JSONオブジェクト以外のテキストは出力しないでください。'
     ].join('\n');
 
