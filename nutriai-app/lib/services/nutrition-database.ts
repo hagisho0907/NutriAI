@@ -221,8 +221,8 @@ async function querySupabase(term: string): Promise<JfctFoodRow | null> {
     try {
       const response = await fetch(url, {
         headers: {
-          apikey: supabaseServiceRoleKey,
-          Authorization: `Bearer ${supabaseServiceRoleKey}`,
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
         },
       });
 
@@ -266,8 +266,8 @@ async function ensureCacheLoaded(): Promise<JfctFoodRow[] | null> {
   try {
     const response = await fetch(url, {
       headers: {
-        apikey: supabaseServiceRoleKey,
-        Authorization: `Bearer ${supabaseServiceRoleKey}`,
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
       },
     });
 
