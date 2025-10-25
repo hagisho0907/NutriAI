@@ -168,6 +168,7 @@ export class GeminiVisionService implements VisionService {
         console.log('📋 Geminiレスポンス受信', data);
 
         const parsedResult = this.parseResponse(data, description);
+        this.logGeminiEstimation(parsedResult);
         return await enrichVisionResultWithDatabase(parsedResult);
       } catch (error) {
         if (error instanceof APIError) {
@@ -346,6 +347,40 @@ export class GeminiVisionService implements VisionService {
         rawResponse: response,
         processedAt: new Date()
       };
+    }
+  }
+
+  private logGeminiEstimation(result: VisionAnalysisResult): void {
+    const itemCount = result.items?.length ?? 0;
+
+    console.log('🧪 Gemini推定: 解析結果サマリ', {
+      itemCount,
+      totalCalories: result.totalCalories,
+      totalProtein: result.totalProtein,
+      totalFat: result.totalFat,
+      totalCarbs: result.totalCarbs,
+      fallback: result.fallback
+    });
+
+    if (!itemCount) {
+      console.warn('🧪 Gemini推定: アイテムが生成されませんでした');
+      return;
+    }
+
+    const tableData = result.items.map((item) => ({
+      name: item.name,
+      quantity: `${item.quantity}${item.unit}`,
+      calories: item.calories,
+      protein: item.protein,
+      fat: item.fat,
+      carbs: item.carbs,
+      confidence: item.confidence
+    }));
+
+    if (typeof console.table === 'function') {
+      console.table(tableData);
+    } else {
+      console.log('🧪 Gemini推定: アイテム詳細', tableData);
     }
   }
 
