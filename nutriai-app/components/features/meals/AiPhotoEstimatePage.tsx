@@ -237,6 +237,137 @@ export function AiPhotoEstimatePage({
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Gemini推定ログ */}
+              {analysisResult && (
+                <div className="space-y-4 rounded-xl border border-primary/30 bg-white/90 p-4 text-sm text-muted-foreground">
+                  <div>
+                    <p className="flex items-center gap-2 font-semibold text-foreground">
+                      <span role="img" aria-label="photo">
+                        📷
+                      </span>
+                      写真の内容 (推定)
+                    </p>
+                    <ul className="mt-2 list-disc space-y-1 pl-5">
+                      {analysisResult.items.length > 0 ? (
+                        analysisResult.items.map((item, index) => (
+                          <li key={`content-${index}`}>
+                            {item.name}
+                            {item.confidence && (
+                              <span className="ml-1 text-xs text-muted-foreground">
+                                (信頼度 {Math.round(item.confidence * 100)}%)
+                              </span>
+                            )}
+                          </li>
+                        ))
+                      ) : (
+                        <li className="text-xs">食品は検出されませんでした</li>
+                      )}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="flex items-center gap-2 font-semibold text-foreground">
+                      <span role="img" aria-label="portion">
+                        🍽
+                      </span>
+                      想定分量
+                    </p>
+                    <ul className="mt-2 space-y-1 rounded-lg bg-primary/5 p-3 text-sm">
+                      {analysisResult.items.length > 0 ? (
+                        analysisResult.items.map((item, index) => (
+                          <li key={`portion-${index}`} className="flex justify-between">
+                            <span>{item.name}</span>
+                            <span>
+                              約{item.quantity}
+                              {item.unit}
+                            </span>
+                          </li>
+                        ))
+                      ) : (
+                        <li>推定分量を算出できませんでした</li>
+                      )}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="flex items-center gap-2 font-semibold text-foreground">
+                      <span role="img" aria-label="pfc">
+                        🔍
+                      </span>
+                      推定PFC (全体)
+                    </p>
+                    <div className="mt-2 overflow-x-auto rounded-lg border border-primary/20">
+                      <table className="min-w-full text-xs">
+                        <thead className="bg-primary/5 text-foreground">
+                          <tr>
+                            <th className="px-3 py-2 text-left font-semibold">食材</th>
+                            <th className="px-3 py-2 text-right font-semibold">量 (g)</th>
+                            <th className="px-3 py-2 text-right font-semibold">P (g)</th>
+                            <th className="px-3 py-2 text-right font-semibold">F (g)</th>
+                            <th className="px-3 py-2 text-right font-semibold">C (g)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {analysisResult.items.length > 0 ? (
+                            <>
+                              {analysisResult.items.map((item, index) => (
+                                <tr key={`pfc-${index}`} className="border-t border-primary/10">
+                                  <td className="px-3 py-2">{item.name}</td>
+                                  <td className="px-3 py-2 text-right">
+                                    {item.quantity}
+                                  </td>
+                                  <td className="px-3 py-2 text-right">{item.protein}</td>
+                                  <td className="px-3 py-2 text-right">{item.fat}</td>
+                                  <td className="px-3 py-2 text-right">{item.carbs}</td>
+                                </tr>
+                              ))}
+                              <tr className="border-t border-primary/20 bg-primary/5 font-semibold text-foreground">
+                                <td className="px-3 py-2">合計</td>
+                                <td className="px-3 py-2 text-right">
+                                  {analysisResult.items.reduce((sum, item) => sum + item.quantity, 0)}
+                                </td>
+                                <td className="px-3 py-2 text-right">{analysisResult.totalProtein}</td>
+                                <td className="px-3 py-2 text-right">{analysisResult.totalFat}</td>
+                                <td className="px-3 py-2 text-right">{analysisResult.totalCarbs}</td>
+                              </tr>
+                            </>
+                          ) : (
+                            <tr>
+                              <td colSpan={5} className="px-3 py-4 text-center text-xs">
+                                PFC情報を取得できませんでした
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="flex items-center gap-2 font-semibold text-foreground">
+                      <span role="img" aria-label="summary">
+                        ✅
+                      </span>
+                      概要まとめ
+                    </p>
+                    <ul className="mt-2 space-y-1 text-sm">
+                      <li>合計エネルギー: 約{analysisResult.totalCalories} kcal</li>
+                      <li>
+                        PFC比: P {analysisResult.totalProtein}g / F {analysisResult.totalFat}g / C{' '}
+                        {analysisResult.totalCarbs}g
+                      </li>
+                      <li>
+                        推定元: {analysisResult.provider === 'gemini' ? 'Gemini' : 'モックAI'} ／ 信頼度{' '}
+                        {Math.round(analysisResult.overallConfidence * 100)}%
+                      </li>
+                      {analysisResult.fallback && (
+                        <li className="text-destructive">Geminiが利用できず、参考値を表示しています。</li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
               {/* 検出された食品項目 */}
               {analysisResult && analysisResult.items.length > 0 && (
                 <div className="space-y-3">
