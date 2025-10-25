@@ -38,6 +38,8 @@ export function AiPhotoEstimatePage({
   const [analysisResult, setAnalysisResult] = useState<VisionAnalysisResult | null>(null);
   const [macros, setMacros] = useState({ protein: 0, fat: 0, carb: 0 });
   const [isEstimating, setIsEstimating] = useState(false);
+  const [isEditingResult, setIsEditingResult] = useState(false);
+  const [reEstimateNotes, setReEstimateNotes] = useState('');
   
   const visionService = createClientVisionService();
 
@@ -45,6 +47,8 @@ export function AiPhotoEstimatePage({
     setSelectedImage(image);
     setShowEstimation(false);
     setAnalysisResult(null);
+    setIsEditingResult(false);
+    setReEstimateNotes('');
   };
 
   const handleImageRemove = () => {
@@ -52,9 +56,26 @@ export function AiPhotoEstimatePage({
     setShowEstimation(false);
     setAnalysisResult(null);
     setMacros({ protein: 0, fat: 0, carb: 0 });
+    setIsEditingResult(false);
+    setReEstimateNotes('');
   };
 
-  const handleEstimate = async () => {
+  const composeDescriptionForGemini = (extraInstruction?: string) => {
+    const base = description.trim();
+    const extra = extraInstruction?.trim();
+
+    if (base && extra) {
+      return `${base}\n\n[再推定指示]\n${extra}`;
+    }
+
+    if (!base && extra) {
+      return `[再推定指示]\n${extra}`;
+    }
+
+    return base;
+  };
+
+  const runEstimation = async (extraInstruction?: string) => {
     console.log('🤖 AI推定ボタンがクリックされました');
     console.log('📷 選択された画像:', selectedImage);
     console.log('🔑 Geminiフラグ:', process.env.NEXT_PUBLIC_ENABLE_GEMINI);
@@ -65,11 +86,16 @@ export function AiPhotoEstimatePage({
       return;
     }
 
+    const combinedDescription = composeDescriptionForGemini(extraInstruction);
+
     setIsEstimating(true);
     console.log('⏳ AI推定を開始します...');
 
     try {
-      const result = await visionService.analyzeFood(selectedImage, description);
+      const result = await visionService.analyzeFood(
+        selectedImage,
+        combinedDescription || undefined
+      );
       setAnalysisResult(result);
       setMacros({
         protein: result.totalProtein,
@@ -107,6 +133,15 @@ export function AiPhotoEstimatePage({
     } finally {
       setIsEstimating(false);
     }
+  };
+
+  const handleEstimate = async () => {
+    await runEstimation();
+  };
+
+  const handleReestimate = async () => {
+    console.log('♻️ 再推定リクエスト:', reEstimateNotes);
+    await runEstimation(reEstimateNotes);
   };
 
   const handleSaveEstimation = () => {
@@ -393,61 +428,127 @@ export function AiPhotoEstimatePage({
               )}
 
               {/* マクロ栄養素の調整 */}
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <Label>タンパク質</Label>
-                  <span>{macros.protein}g</span>
+              <div className="space-y-4 rounded-xl border border-primary/20 bg-white/90 p-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base">AI推定の微調整</Label>
+                  {isEditingResult ? (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setIsEditingResult(false)}
+                      disabled={isEstimating}
+                    >
+                      編集を閉じる
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsEditingResult(true)}
+                      disabled={isEstimating}
+                    >
+                      編集
+                    </Button>
+                  )}
                 </div>
-                <Slider
-                  value={[macros.protein]}
-                  onValueChange={(v) => setMacros({ ...macros, protein: v[0] })}
-                  min={0}
-                  max={100}
-                  step={0.1}
-                  className="[&_[role=slider]]:bg-primary"
-                />
+
+                {isEditingResult ? (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label>タンパク質</Label>
+                        <span>{macros.protein}g</span>
+                      </div>
+                      <Slider
+                        value={[macros.protein]}
+                        onValueChange={(v) => setMacros({ ...macros, protein: v[0] })}
+                        min={0}
+                        max={100}
+                        step={0.1}
+                        className="[&_[role=slider]]:bg-primary"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label>脂質</Label>
+                        <span>{macros.fat}g</span>
+                      </div>
+                      <Slider
+                        value={[macros.fat]}
+                        onValueChange={(v) => setMacros({ ...macros, fat: v[0] })}
+                        min={0}
+                        max={100}
+                        step={0.1}
+                        className="[&_[role=slider]]:bg-primary"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label>炭水化物</Label>
+                        <span>{macros.carb}g</span>
+                      </div>
+                      <Slider
+                        value={[macros.carb]}
+                        onValueChange={(v) => setMacros({ ...macros, carb: v[0] })}
+                        min={0}
+                        max={200}
+                        step={0.1}
+                        className="[&_[role=slider]]:bg-primary"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>再推定メモ</Label>
+                      <Textarea
+                        placeholder="再推定にあたり、より詳しい条件や指摘箇所があれば教えてください。"
+                        value={reEstimateNotes}
+                        onChange={(e) => setReEstimateNotes(e.target.value)}
+                        rows={4}
+                        className="resize-none"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        追加メモはGeminiへの追記として渡され、次の再推定に反映されます。
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3 text-sm text-muted-foreground">
+                    <div className="flex justify-between">
+                      <span>タンパク質</span>
+                      <span>{macros.protein}g</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>脂質</span>
+                      <span>{macros.fat}g</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>炭水化物</span>
+                      <span>{macros.carb}g</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <Label>脂質</Label>
-                  <span>{macros.fat}g</span>
-                </div>
-                <Slider
-                  value={[macros.fat]}
-                  onValueChange={(v) => setMacros({ ...macros, fat: v[0] })}
-                  min={0}
-                  max={100}
-                  step={0.1}
-                  className="[&_[role=slider]]:bg-primary"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <Label>炭水化物</Label>
-                  <span>{macros.carb}g</span>
-                </div>
-                <Slider
-                  value={[macros.carb]}
-                  onValueChange={(v) => setMacros({ ...macros, carb: v[0] })}
-                  min={0}
-                  max={200}
-                  step={0.1}
-                  className="[&_[role=slider]]:bg-primary"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowEstimation(false)}
-                >
-                  再推定
-                </Button>
+              <div
+                className={`grid gap-3 ${
+                  isEditingResult ? 'sm:grid-cols-2' : 'sm:grid-cols-1'
+                }`}
+              >
+                {isEditingResult && (
+                  <Button
+                    variant="outline"
+                    onClick={handleReestimate}
+                    disabled={isEstimating}
+                  >
+                    {isEstimating ? '再推定中...' : '指示で再推定'}
+                  </Button>
+                )}
                 <Button
                   onClick={handleSaveEstimation}
                   className="bg-primary hover:bg-accent"
+                  disabled={isEstimating}
                 >
                   登録する
                 </Button>
