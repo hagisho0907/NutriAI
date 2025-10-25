@@ -70,33 +70,44 @@ export function AiPhotoEstimatePage({
     }
 
     if (extra && analysisResult) {
-      const previousSummaryLines = [
-        '前回推定コンテキスト:',
-        `- 合計エネルギー: 約${analysisResult.totalCalories} kcal`,
-        `- PFC: P ${analysisResult.totalProtein}g / F ${analysisResult.totalFat}g / C ${analysisResult.totalCarbs}g`,
-        '- 検出された食品:',
-        ...analysisResult.items.map(
-          (item, index) =>
-            `  ${index + 1}. ${item.name} (${item.quantity}${item.unit}, ${item.calories}kcal, P${item.protein}g F${item.fat}g C${item.carbs}g, 信頼度${Math.round(
-              (item.confidence ?? 0.6) * 100
-            )}%)`
-        ),
-      ];
+      const previousSummary = {
+        totals: {
+          calories: analysisResult.totalCalories,
+          protein: analysisResult.totalProtein,
+          fat: analysisResult.totalFat,
+          carbs: analysisResult.totalCarbs,
+        },
+        items: analysisResult.items.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          calories: item.calories,
+          protein: item.protein,
+          fat: item.fat,
+          carbs: item.carbs,
+          confidence: item.confidence,
+        })),
+      };
 
-      if (analysisResult.notes) {
-        previousSummaryLines.push('- 参考メモ:', analysisResult.notes);
-      }
-
-      sections.push(previousSummaryLines.join('\n'));
       sections.push(
-        ['再推定指示:', extra, '上記の指示を踏まえて前回推定を必要最小限で改善してください。'].join('\n')
+        '前回推定サマリ(JSON):\n' + JSON.stringify(previousSummary, null, 2)
       );
-
-      return sections.join('\n\n');
-    }
-
-    if (extra) {
-      sections.push(`追加メモ:\n${extra}`);
+      sections.push(
+        [
+          '再推定指示:',
+          extra,
+          '期待する動作: 上記サマリを参考に、不要な食品の削除や量の補正など必要最小限の変更で新しい推定を生成してください。',
+          '注意: サマリや指示文は最終JSON出力に含めず、更新後の食品推定のみを返してください。'
+        ].join('\n')
+      );
+    } else if (extra) {
+      sections.push(
+        [
+          '再推定指示:',
+          extra,
+          '注意: この指示文は最終JSONに含めず、推定にのみ使用してください。'
+        ].join('\n')
+      );
     }
 
     return sections.join('\n\n');
