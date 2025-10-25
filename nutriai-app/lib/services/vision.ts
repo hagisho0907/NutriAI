@@ -27,6 +27,7 @@ export interface VisionAnalysisResult {
   analysisId: string;
   provider: string;
   fallback: boolean;
+  notes?: string;
   rawResponse?: unknown;
   processedAt: Date;
 }
@@ -203,6 +204,8 @@ export class GeminiVisionService implements VisionService {
 
     const instruction = [
       'あなたは日本語で回答する栄養アシスタントです。写真に写っている食事を解析し、可能な限り実際の重量（g）を推定してください。',
+      '食品や料理の数はできる限り正しく数えてください。',
+      '単一の料理でも構成する食品をなるべく分解し、それぞれの量を推定してください。',
       '必ず以下のJSONスキーマに沿って出力し、食品名・説明は日本語で記載してください。',
       '{',
       '  "items": [',
@@ -217,7 +220,7 @@ export class GeminiVisionService implements VisionService {
       '      "confidence": number (0-1)',
       '    }',
       '  ],',
-      '  "notes": "optional short string"',
+      '  "notes": "Markdownで、写真の内容/想定分量/推定PFC/概要まとめの順に見出しと箇条書きを含めた要約テキスト"',
       '}',
       '食品の数に制限はありません。重量(g)が不明な場合でも最も可能性が高い値を推定して記入してください。',
       'JSONオブジェクト以外のテキストは出力しないでください。'
@@ -287,6 +290,7 @@ export class GeminiVisionService implements VisionService {
   private parseResponse(response: any, description?: string): VisionAnalysisResult {
     try {
       const payload = this.extractJsonPayload(response);
+      const summaryNotes = this.extractNotes(payload);
       const candidateItems = this.extractCandidateItems(payload);
       let items = candidateItems
         .map((candidate: any) => this.normalizeFoodItem(candidate))
@@ -327,6 +331,7 @@ export class GeminiVisionService implements VisionService {
         analysisId: `gemini-${Date.now()}`,
         provider: 'gemini',
         fallback,
+        notes: summaryNotes,
         rawResponse: response,
         processedAt: new Date()
       };
@@ -344,6 +349,7 @@ export class GeminiVisionService implements VisionService {
         analysisId: `gemini-fallback-${Date.now()}`,
         provider: 'gemini',
         fallback: true,
+        notes: undefined,
         rawResponse: response,
         processedAt: new Date()
       };
@@ -351,37 +357,16 @@ export class GeminiVisionService implements VisionService {
   }
 
   private logGeminiEstimation(result: VisionAnalysisResult): void {
-    const itemCount = result.items?.length ?? 0;
+    const structuredNotes =
+      (typeof result.notes === 'string' && result.notes.trim().length > 0
+        ? result.notes
+        : this.buildStructuredNotes(result)) || '推定結果の詳細を生成できませんでした。';
 
-    console.log('🧪 Gemini推定: 解析結果サマリ', {
-      itemCount,
-      totalCalories: result.totalCalories,
-      totalProtein: result.totalProtein,
-      totalFat: result.totalFat,
-      totalCarbs: result.totalCarbs,
-      fallback: result.fallback
-    });
-
-    if (!itemCount) {
-      console.warn('🧪 Gemini推定: アイテムが生成されませんでした');
-      return;
+    if (!result.notes) {
+      result.notes = structuredNotes;
     }
 
-    const tableData = result.items.map((item) => ({
-      name: item.name,
-      quantity: `${item.quantity}${item.unit}`,
-      calories: item.calories,
-      protein: item.protein,
-      fat: item.fat,
-      carbs: item.carbs,
-      confidence: item.confidence
-    }));
-
-    if (typeof console.table === 'function') {
-      console.table(tableData);
-    } else {
-      console.log('🧪 Gemini推定: アイテム詳細', tableData);
-    }
+    console.log(['🧪 Gemini推定ログ', structuredNotes].join('\n\n'));
   }
 
   private extractJsonPayload(response: any): any | null {
@@ -404,6 +389,81 @@ export class GeminiVisionService implements VisionService {
     }
 
     return null;
+  }
+
+  private buildStructuredNotes(result: VisionAnalysisResult): string {
+    const items = result.items ?? [];
+    const lines: string[] = [];
+
+    lines.push('📷 写真の内容 (推定)');
+    if (items.length === 0) {
+      lines.push('・食品は検出されませんでした');
+    } else {
+      items.forEach((item, index) => {
+        const confidenceText =
+          typeof item.confidence === 'number'
+            ? ` (信頼度: ${Math.round(item.confidence * 100)}%)`
+            : '';
+        lines.push(`・${index + 1}. ${item.name}${confidenceText}`);
+      });
+    }
+
+    lines.push('', '🍽 想定分量');
+    if (items.length === 0) {
+      lines.push('・推定分量を算出できませんでした');
+    } else {
+      items.forEach((item) => {
+        lines.push(`・${item.name}: 約${item.quantity}${item.unit}`);
+      });
+    }
+
+    lines.push('', '🔍 推定PFC (全体)');
+    lines.push('食材 | 量(g) | たんぱく質 | 脂質 | 炭水化物');
+    lines.push('---|---|---|---|---');
+    let proteinTotal = 0;
+    let fatTotal = 0;
+    let carbTotal = 0;
+    items.forEach((item) => {
+      proteinTotal += item.protein;
+      fatTotal += item.fat;
+      carbTotal += item.carbs;
+      lines.push(
+        `${item.name} | ${item.quantity} | ${item.protein}g | ${item.fat}g | ${item.carbs}g`
+      );
+    });
+    lines.push(
+      `合計 | ${
+        items.reduce((sum, item) => sum + item.quantity, 0) || 0
+      } | ${Math.round(proteinTotal * 10) / 10}g | ${Math.round(fatTotal * 10) / 10}g | ${Math.round(
+        carbTotal * 10
+      ) / 10}g`
+    );
+
+    lines.push('', '✅ 概要まとめ');
+    lines.push(`・合計エネルギー: 約${result.totalCalories} kcal`);
+    lines.push(
+      `・PFC比: P ${result.totalProtein}g / F ${result.totalFat}g / C ${result.totalCarbs}g`
+    );
+    lines.push(`・推定元: ${result.provider}`);
+    lines.push(`・信頼度: ${Math.round(result.overallConfidence * 100)}%`);
+    if (result.fallback) {
+      lines.push('・Gemini結果が得られず、参考値としてモック推定を表示しています');
+    }
+
+    return lines.join('\n');
+  }
+
+  private extractNotes(payload: any): string | undefined {
+    if (!payload) {
+      return undefined;
+    }
+
+    const notes = (payload.notes ?? payload.summary ?? payload.analysis) as unknown;
+    if (typeof notes === 'string' && notes.trim().length > 0) {
+      return notes.trim();
+    }
+
+    return undefined;
   }
 
   private extractParts(candidate: any): any[] {
