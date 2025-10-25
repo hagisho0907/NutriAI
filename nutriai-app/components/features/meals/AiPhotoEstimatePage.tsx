@@ -63,16 +63,43 @@ export function AiPhotoEstimatePage({
   const composeDescriptionForGemini = (extraInstruction?: string) => {
     const base = description.trim();
     const extra = extraInstruction?.trim();
+    const sections: string[] = [];
 
-    if (base && extra) {
-      return `${base}\n\n[再推定指示]\n${extra}`;
+    if (base) {
+      sections.push(`ユーザー説明:\n${base}`);
     }
 
-    if (!base && extra) {
-      return `[再推定指示]\n${extra}`;
+    if (extra && analysisResult) {
+      const previousSummaryLines = [
+        '前回推定コンテキスト:',
+        `- 合計エネルギー: 約${analysisResult.totalCalories} kcal`,
+        `- PFC: P ${analysisResult.totalProtein}g / F ${analysisResult.totalFat}g / C ${analysisResult.totalCarbs}g`,
+        '- 検出された食品:',
+        ...analysisResult.items.map(
+          (item, index) =>
+            `  ${index + 1}. ${item.name} (${item.quantity}${item.unit}, ${item.calories}kcal, P${item.protein}g F${item.fat}g C${item.carbs}g, 信頼度${Math.round(
+              (item.confidence ?? 0.6) * 100
+            )}%)`
+        ),
+      ];
+
+      if (analysisResult.notes) {
+        previousSummaryLines.push('- 参考メモ:', analysisResult.notes);
+      }
+
+      sections.push(previousSummaryLines.join('\n'));
+      sections.push(
+        ['再推定指示:', extra, '上記の指示を踏まえて前回推定を必要最小限で改善してください。'].join('\n')
+      );
+
+      return sections.join('\n\n');
     }
 
-    return base;
+    if (extra) {
+      sections.push(`追加メモ:\n${extra}`);
+    }
+
+    return sections.join('\n\n');
   };
 
   const runEstimation = async (extraInstruction?: string) => {
