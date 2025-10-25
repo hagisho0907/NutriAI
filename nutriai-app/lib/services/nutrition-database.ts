@@ -1,5 +1,8 @@
 import type { FoodItem, VisionAnalysisResult } from './vision';
 
+const nutritionEnrichmentEnabled =
+  process.env.ENABLE_SUPABASE_NUTRITION === 'true';
+
 const supabaseUrl =
   process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey =
@@ -8,7 +11,8 @@ const supabaseKey =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
   '';
 
-const canUseSupabase = Boolean(supabaseUrl && supabaseKey);
+const canUseSupabase =
+  nutritionEnrichmentEnabled && Boolean(supabaseUrl && supabaseKey);
 const supabaseRestEndpoint = canUseSupabase
   ? `${supabaseUrl.replace(/\/$/, '')}/rest/v1/jfct_foods`
   : null;
@@ -29,12 +33,13 @@ export async function enrichVisionResultWithDatabase(
   result: VisionAnalysisResult
 ): Promise<VisionAnalysisResult> {
   console.log('🥗 栄養突合: 開始', {
+    enabled: nutritionEnrichmentEnabled,
     canUseSupabase,
     supabaseConfigured: Boolean(supabaseRestEndpoint)
   });
 
   if (!canUseSupabase || !supabaseRestEndpoint) {
-    console.warn('🥗 栄養突合: Supabase未設定のためGemini結果を返却');
+    console.warn('🥗 栄養突合: Supabase照合は無効化されています');
     return {
       ...result,
       items: result.items.map((item) => ({
