@@ -2,9 +2,13 @@ import type { FoodItem, VisionAnalysisResult } from './vision';
 
 const supabaseUrl =
   process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ??
+  process.env.SUPABASE_ANON_KEY ??
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+  '';
 
-const canUseSupabase = Boolean(supabaseUrl && supabaseServiceRoleKey);
+const canUseSupabase = Boolean(supabaseUrl && supabaseKey);
 const supabaseRestEndpoint = canUseSupabase
   ? `${supabaseUrl.replace(/\/$/, '')}/rest/v1/jfct_foods`
   : null;
